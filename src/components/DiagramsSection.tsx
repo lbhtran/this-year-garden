@@ -207,7 +207,7 @@ export function DiagramsSection() {
             <h3>Grow Bags</h3>
             <span className="dims">40–50 L each</span>
           </div>
-          <div className="diagram-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div className="diagram-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
             <div>
               <div className="growbag-diagram">
                 <span className="g-emoji">🥔</span>
