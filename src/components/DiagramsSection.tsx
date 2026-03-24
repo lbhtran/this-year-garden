@@ -11,29 +11,42 @@ export function DiagramsSection() {
         <div className="diagram-card">
           <div className="diagram-header">
             <h3>Corner Trellis Planter</h3>
-            <span className="dims">2 sides · large</span>
+            <span className="dims">right-angle triangle · 70 × 70 cm</span>
           </div>
           <div className="diagram-body">
-            <div className="trellis-wrap">
-              <div className="trellis-side">
-                <div className="trellis-lines"></div>
-                <div className="t-label">Side A</div>
-                <span className="t-emoji">🍅</span>
-                <div className="t-name">Cherry Tomatoes</div>
-                <div className="t-count">3 plants · train up trellis ↑</div>
-              </div>
-              <div className="trellis-side">
-                <div className="trellis-lines"></div>
-                <div className="t-label">Side B</div>
-                <span className="t-emoji">🍅</span>
-                <div className="t-name">Beef Tomatoes</div>
-                <div className="t-count">2 heirloom plants · train up trellis ↑</div>
-              </div>
-              <div className="trellis-border">
+            <div className="trellis-triangle-wrap">
+              <svg className="trellis-triangle-svg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+                {/* Triangle fill */}
+                <polygon points="20,200 20,20 200,200" fill="var(--green-wash)" stroke="var(--green-mid)" strokeWidth="2.5" />
+                {/* Right-angle marker */}
+                <polyline points="20,185 35,185 35,200" fill="none" stroke="var(--green-mid)" strokeWidth="2" />
+                {/* Trellis grid on Side A (vertical leg) */}
+                {[40,60,80,100,120,140,160,180].map(y => (
+                  <line key={`ha-${y}`} x1="20" y1={y} x2="25" y2={y} stroke="var(--green-light)" strokeWidth="1.5" />
+                ))}
+                {/* Trellis grid on Side B (horizontal leg) */}
+                {[40,60,80,100,120,140,160,180].map(x => (
+                  <line key={`hb-${x}`} x1={x} y1="200" x2={x} y2="195" stroke="var(--green-light)" strokeWidth="1.5" />
+                ))}
+                {/* Side A label */}
+                <text x="10" y="112" textAnchor="middle" fontSize="10" fill="var(--muted)" fontFamily="'DM Mono', monospace" transform="rotate(-90,10,112)">SIDE A — 70 cm</text>
+                {/* Side B label */}
+                <text x="110" y="218" textAnchor="middle" fontSize="10" fill="var(--muted)" fontFamily="'DM Mono', monospace">SIDE B — 70 cm</text>
+                {/* Side A plant info */}
+                <text x="38" y="90" fontSize="18" textAnchor="middle">🍅</text>
+                <text x="38" y="115" fontSize="9" fill="var(--green-deep)" fontFamily="'Cormorant Garamond', serif" fontWeight="600" textAnchor="middle">Cherry</text>
+                <text x="38" y="126" fontSize="9" fill="var(--green-deep)" fontFamily="'Cormorant Garamond', serif" fontWeight="600" textAnchor="middle">Tomatoes</text>
+                <text x="38" y="138" fontSize="8" fill="var(--muted)" fontFamily="'DM Mono', monospace" textAnchor="middle">3 plants ↑</text>
+                {/* Side B plant info */}
+                <text x="112" y="172" fontSize="18" textAnchor="middle">🍅</text>
+                <text x="112" y="188" fontSize="9" fill="var(--green-deep)" fontFamily="'Cormorant Garamond', serif" fontWeight="600" textAnchor="middle">Beef Tomatoes</text>
+                <text x="112" y="198" fontSize="8" fill="var(--muted)" fontFamily="'DM Mono', monospace" textAnchor="middle">2 heirloom ↑</text>
+              </svg>
+              <div className="trellis-border" style={{ gridColumn: 'unset', marginTop: 12 }}>
                 🌼 Marigolds border all around &nbsp;·&nbsp; 🌸 Nasturtiums climbing trellis (aphid trap crop)
               </div>
             </div>
-            <div className="diagram-note">Pinch out side shoots weekly. Tie in regularly as they grow. Feed weekly once flowering begins.</div>
+            <div className="diagram-note">Right-angle triangle planter with 70 cm trellis on each of the two right-angle sides. Pinch out side shoots weekly. Tie in regularly as they grow. Feed weekly once flowering begins.</div>
           </div>
         </div>
 
@@ -145,19 +158,27 @@ export function DiagramsSection() {
         </div>
 
         {/* Grow Bags */}
-        <div className="diagram-card">
+        <div className="diagram-card" style={{ gridColumn: '1 / -1' }}>
           <div className="diagram-header">
             <h3>Grow Bags</h3>
             <span className="dims">40–50 L each</span>
           </div>
-          <div className="diagram-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="diagram-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
             <div>
               <div className="growbag-diagram">
                 <span className="g-emoji">🥔</span>
-                <div className="g-name">Potatoes</div>
+                <div className="g-name">Potatoes #1</div>
                 <div className="g-variety">Maris Piper or Charlotte</div>
               </div>
               <div className="diagram-note" style={{ marginTop: 10 }}>Currently chitting on windowsill. Half fill bag; earth up as shoots reach 15–20cm.</div>
+            </div>
+            <div>
+              <div className="growbag-diagram">
+                <span className="g-emoji">🥔</span>
+                <div className="g-name">Potatoes #2</div>
+                <div className="g-variety">Maris Piper or Charlotte</div>
+              </div>
+              <div className="diagram-note" style={{ marginTop: 10 }}>Second potato bag — chit alongside bag #1. Earth up as shoots emerge.</div>
             </div>
             <div>
               <div className="growbag-diagram" style={{ background: 'linear-gradient(135deg,#9a6b3a,#7a5230)' }}>
@@ -166,6 +187,14 @@ export function DiagramsSection() {
                 <div className="g-variety">Nantes 2 or Chantenay</div>
               </div>
               <div className="diagram-note" style={{ marginTop: 10 }}>Sow directly in rows from late March. Fill fully with light compost + grit. Thin to 5cm.</div>
+            </div>
+            <div>
+              <div className="growbag-diagram" style={{ background: 'linear-gradient(135deg,#5a7a3a,#3d5c28)' }}>
+                <span className="g-emoji">🌿</span>
+                <div className="g-name">Fig</div>
+                <div className="g-variety">Move in as season progresses</div>
+              </div>
+              <div className="diagram-note" style={{ marginTop: 10 }}>Transfer fig to a large grow bag as the season progresses to allow a bigger tree to develop. Move to shed in hard frosts.</div>
             </div>
           </div>
         </div>
@@ -210,12 +239,6 @@ export function DiagramsSection() {
             <div className="pc-size">Individual pots</div>
             <span className="pc-tag tag-hardy">Hardy</span>
             <div className="pc-note">Growhouse in hard frosts</div>
-          </div>
-          <div className="pot-card moveable">
-            <span className="pc-emoji">🌿</span>
-            <div className="pc-name">Fig</div>
-            <div className="pc-size">Large patio pot</div>
-            <span className="pc-tag tag-moveable">Move to shed in frosts</span>
           </div>
         </div>
       </div>

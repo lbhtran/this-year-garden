@@ -401,6 +401,19 @@ body::before {
   margin-bottom: 20px;
 }
 
+.trellis-triangle-wrap {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.trellis-triangle-svg {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+}
+
 .trellis-side {
   background: var(--green-wash);
   border: 2px solid var(--green-mid);
