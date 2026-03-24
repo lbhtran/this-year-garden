@@ -28,7 +28,7 @@ export function WeatherWidget({ plants, weather }: Props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>
-            📍 London, UK — Current Weather
+            📍 Milton Keynes, UK — Current Weather
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 48 }}>{info.emoji}</span>
