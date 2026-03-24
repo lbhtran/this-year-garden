@@ -287,6 +287,13 @@ body::before {
   margin-top: 8px;
 }
 
+.container-diagram-link {
+  margin-top: 10px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--green-mid);
+}
+
 /* ── DIAGRAMS ── */
 .diagrams-grid {
   display: grid;

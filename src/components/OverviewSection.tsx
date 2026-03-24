@@ -32,11 +32,25 @@ export function OverviewSection({ containers }: Props) {
 
       <div className="overview-grid">
         {filtered.map(c => (
-          <div key={c.id} className="overview-card" style={{ opacity: c.onHold ? 0.55 : 1 }}>
+          <div
+            key={c.id}
+            className="overview-card"
+            style={{ opacity: c.onHold ? 0.55 : 1, cursor: c.diagramId ? 'pointer' : 'default' }}
+            onClick={() => {
+              if (c.diagramId) {
+                document.getElementById(c.diagramId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }}
+          >
             <div className="container-name">{c.emoji} {c.name}</div>
             <div className="container-size">{c.size}</div>
             <div className="container-use">{c.use}</div>
             {c.onHold && <span className="on-hold-badge">Deferred</span>}
+            {c.diagramId && (
+              <div className="container-diagram-link">
+                view diagram →
+              </div>
+            )}
           </div>
         ))}
         {filtered.length === 0 && (

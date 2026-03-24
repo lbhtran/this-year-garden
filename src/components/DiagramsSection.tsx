@@ -8,7 +8,7 @@ export function DiagramsSection() {
       <div className="diagrams-grid">
 
         {/* Corner Trellis Planter */}
-        <div className="diagram-card">
+        <div id="diagram-c1" className="diagram-card">
           <div className="diagram-header">
             <h3>Corner Trellis Planter</h3>
             <span className="dims">right-angle triangle · 70 × 70 cm</span>
@@ -85,7 +85,7 @@ export function DiagramsSection() {
         </div>
 
         {/* Planter 1 — Herbs */}
-        <div className="diagram-card">
+        <div id="diagram-c2" className="diagram-card">
           <div className="diagram-header">
             <h3>Planter 1 — Herbs &amp; Spring Onions</h3>
             <span className="dims">20 × 90 cm</span>
@@ -118,7 +118,7 @@ export function DiagramsSection() {
         </div>
 
         {/* Planter 2 — Salad */}
-        <div className="diagram-card">
+        <div id="diagram-c3" className="diagram-card">
           <div className="diagram-header">
             <h3>Planter 2 — Salad &amp; Lettuce</h3>
             <span className="dims">20 × 90 cm</span>
@@ -146,7 +146,7 @@ export function DiagramsSection() {
         </div>
 
         {/* Raised Bed 1 */}
-        <div className="diagram-card">
+        <div id="diagram-c4" className="diagram-card">
           <div className="diagram-header">
             <h3>Raised Bed 1 — Vegetables</h3>
             <span className="dims">60 × 120 cm · curved edges</span>
@@ -174,7 +174,7 @@ export function DiagramsSection() {
         </div>
 
         {/* Raised Bed 2 */}
-        <div className="diagram-card">
+        <div id="diagram-c5" className="diagram-card">
           <div className="diagram-header">
             <h3>Raised Bed 2 — Asparagus &amp; Brassicas</h3>
             <span className="dims">60 × 120 cm · curved edges</span>
@@ -202,7 +202,7 @@ export function DiagramsSection() {
         </div>
 
         {/* Grow Bags */}
-        <div className="diagram-card" style={{ gridColumn: '1 / -1' }}>
+        <div id="diagram-growbags" className="diagram-card" style={{ gridColumn: '1 / -1' }}>
           <div className="diagram-header">
             <h3>Grow Bags</h3>
             <span className="dims">40–50 L each</span>
@@ -246,7 +246,7 @@ export function DiagramsSection() {
       </div>
 
       {/* Individual Pots */}
-      <div style={{ marginTop: 32 }}>
+      <div id="diagram-pots" style={{ marginTop: 32 }}>
         <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, color: 'var(--green-deep)', marginBottom: 20, fontWeight: 400 }}>
           Individual <em style={{ fontStyle: 'italic', color: 'var(--green-mid)' }}>Pots</em>
         </h3>
