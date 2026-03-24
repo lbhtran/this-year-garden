@@ -8,9 +8,9 @@ export interface Container {
 }
 
 export const initialContainers: Container[] = [
-  { id: 'c1', emoji: '🌿', name: 'Corner Trellis Planter', size: 'Right-angle triangle — 70 × 70 cm trellis sides', use: 'Cherry tomatoes (Side A, vertical) + Beef tomatoes (Side B, horizontal). Marigolds border + nasturtiums climbing trellis.' },
-  { id: 'c2', emoji: '🌿', name: 'Planter 1', size: '20 × 90 × 25 cm', use: 'Herbs: basil, parsley, chives. Mint on hold for next season.' },
-  { id: 'c3', emoji: '🥗', name: 'Planter 2', size: '20 × 90 × 25 cm', use: 'Mixed salad leaves (cut & come again) + spring onions.' },
+  { id: 'c1', emoji: '🌿', name: 'Corner Trellis Planter', size: 'Right-angle triangle — 70 × 70 cm trellis sides', use: 'Cherry tomatoes (Side A, vertical) + Beef tomatoes (Side B, horizontal). Marigolds & nasturtiums along the long (diagonal) side.' },
+  { id: 'c2', emoji: '🌿', name: 'Planter 1', size: '20 × 90 × 25 cm', use: 'Herbs & spring onions: basil (in grow house until warm), parsley, chives, spring onions. Mint on hold for next season.' },
+  { id: 'c3', emoji: '🥗', name: 'Planter 2', size: '20 × 90 × 25 cm', use: 'Fully salad & lettuce: mixed salad leaves (cut & come again), Little Gem lettuce, rocket. Sow successionally.' },
   { id: 'c4', emoji: '🥬', name: 'Raised Bed 1', size: '60 × 120 cm — curved edges', use: 'Perennial kale centre · lettuce & spinach inner ring · purple curly kale outer ring · nasturtium border.' },
   { id: 'c5', emoji: '🌱', name: 'Raised Bed 2', size: '60 × 120 cm — curved edges', use: 'Asparagus centre (permanent) · pak choi & tenderstem broccoli inner ring · spring onions outer ring · nasturtium border.' },
   { id: 'c6', emoji: '🥔', name: 'Grow Bag 1', size: '40–50 L', use: 'Potatoes #1 — currently chitting. Maris Piper or Charlotte.' },
