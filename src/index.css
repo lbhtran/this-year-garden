@@ -401,6 +401,47 @@ body::before {
   margin-bottom: 20px;
 }
 
+.trellis-triangle-wrap {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.trellis-triangle-svg {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+
+.trellis-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 18px;
+  border-top: 2px dashed;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
 .trellis-side {
   background: var(--green-wash);
   border: 2px solid var(--green-mid);
