@@ -1,5 +1,6 @@
+'use client';
 import { createContext, useContext } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@clerk/nextjs';
 
 interface AuthContextValue {
   clerkEnabled: boolean;

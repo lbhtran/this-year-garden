@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from 'react';
 import { useAppAuth } from './contexts/AuthContext';
 import { Hero } from './components/Hero';
