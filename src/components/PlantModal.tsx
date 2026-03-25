@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Plant, PlantStage } from '../data/plants';
+import type { Plant, PlantStage, ContainerStop, ContainerStatus } from '../data/plants';
 import { stageLabels } from '../data/plants';
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
 }
 
 const stages: PlantStage[] = ['wishlist', 'sourced', 'sown', 'sprouted', 'chitting', 'hardening-off', 'planted', 'flowering', 'fruiting', 'harvesting', 'dormant'];
+const containerStatuses: ContainerStatus[] = ['past', 'current', 'future'];
+const containerStatusLabels: Record<ContainerStatus, string> = { past: 'Past', current: 'Now', future: 'Next' };
 
 export function PlantModal({ plant, onSave, onClose }: Props) {
   const isNew = !plant;
@@ -19,6 +21,7 @@ export function PlantModal({ plant, onSave, onClose }: Props) {
     stage: 'wishlist',
     nextStep: '',
     placement: '',
+    containers: [],
     frostSensitive: false,
     minTemp: 0,
   });
@@ -96,6 +99,47 @@ export function PlantModal({ plant, onSave, onClose }: Props) {
               placeholder="e.g. Raised Bed 1"
               style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 14, background: 'white' }}
             />
+          </div>
+
+          {/* Container journey */}
+          <div>
+            <label style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--muted)', display: 'block', marginBottom: 6 }}>Container Journey</label>
+            {(form.containers ?? []).map((stop: ContainerStop, i: number) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '100px 1fr auto', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                <select
+                  value={stop.status}
+                  onChange={e => setForm(f => {
+                    const updated = [...(f.containers ?? [])];
+                    updated[i] = { ...updated[i], status: e.target.value as ContainerStatus };
+                    return { ...f, containers: updated };
+                  })}
+                  style={{ padding: '8px 10px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, background: 'white', cursor: 'pointer' }}
+                >
+                  {containerStatuses.map(s => <option key={s} value={s}>{containerStatusLabels[s]}</option>)}
+                </select>
+                <input
+                  value={stop.label}
+                  onChange={e => setForm(f => {
+                    const updated = [...(f.containers ?? [])];
+                    updated[i] = { ...updated[i], label: e.target.value };
+                    return { ...f, containers: updated };
+                  })}
+                  placeholder="e.g. Seed tray (indoors)"
+                  style={{ padding: '8px 10px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, background: 'white' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, containers: (f.containers ?? []).filter((_, j) => j !== i) }))}
+                  style={{ background: 'none', border: '1px solid var(--cream-dark)', borderRadius: 8, cursor: 'pointer', fontSize: 14, color: 'var(--muted)', padding: '6px 10px' }}
+                  title="Remove this stop"
+                >✕</button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setForm(f => ({ ...f, containers: [...(f.containers ?? []), { label: '', status: 'current' as ContainerStatus }] }))}
+              style={{ padding: '7px 14px', border: '1px dashed var(--green-mid)', borderRadius: 8, background: 'transparent', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--green-mid)' }}
+            >+ Add stop</button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

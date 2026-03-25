@@ -1,4 +1,5 @@
-import type { Plant } from '../data/plants';
+import React from 'react';
+import type { Plant, ContainerStop } from '../data/plants';
 import { stageLabels, stageColors } from '../data/plants';
 
 interface Props {
@@ -62,6 +63,25 @@ const getDiagramId = (placement: string): string | null => {
   return DIAGRAM_RULES.find(rule => rule.keywords.some(kw => p.includes(kw)))?.id ?? null;
 };
 
+const CONTAINER_STATUS_CONFIG: Record<ContainerStop['status'], { dot: string; label: string; dimmed: boolean }> = {
+  past:    { dot: 'var(--muted)', label: 'Past', dimmed: true },
+  current: { dot: 'var(--green-mid)', label: 'Now', dimmed: false },
+  future:  { dot: 'var(--rust)', label: 'Next', dimmed: false },
+};
+
+const getStatusBadgeStyle = (color: string): React.CSSProperties => ({
+  fontFamily: "'DM Mono', monospace",
+  fontSize: 9,
+  letterSpacing: 1,
+  textTransform: 'uppercase',
+  color,
+  background: `color-mix(in srgb, ${color} 12%, transparent)`,
+  padding: '1px 6px',
+  borderRadius: 6,
+  border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
+  flexShrink: 0,
+});
+
 /** Small delay (ms) to let the modal unmount before scrolling, so the target element is unobscured */
 const MODAL_CLOSE_DELAY_MS = 50;
 
@@ -111,27 +131,68 @@ export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
         {plant.placement && (
           <div style={{ marginBottom: 20 }}>
             <span style={labelStyle}>🪴 Container</span>
-            <div
-              onClick={diagramId ? handleContainerClick : undefined}
-              style={{
-                fontSize: 14,
-                color: diagramId ? 'var(--green-deep)' : 'var(--ink)',
-                background: 'var(--green-wash)',
-                borderRadius: 8,
-                padding: '10px 14px',
-                fontWeight: 500,
-                border: `1px solid ${diagramId ? 'var(--green-mid)' : 'var(--green-pale)'}`,
-                cursor: diagramId ? 'pointer' : 'default',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                transition: 'opacity 0.15s',
-              }}
-              title={diagramId ? 'Click to view in Planting Diagrams' : undefined}
-            >
-              <span>{isPlacementTBD(plant.placement) ? '⏳ Placement TBD — waiting for garden layout' : plant.placement}</span>
-              {diagramId && <span style={{ fontSize: 12, color: 'var(--green-mid)', marginLeft: 8, flexShrink: 0 }}>View diagram →</span>}
-            </div>
+            {plant.containers && plant.containers.length > 0 ? (
+              /* Journey timeline */
+              <div style={{ background: 'var(--green-wash)', borderRadius: 8, border: '1px solid var(--green-pale)', overflow: 'hidden' }}>
+                {plant.containers.map((stop, i) => {
+                  const cfg = CONTAINER_STATUS_CONFIG[stop.status];
+                  const stopDiagramId = getDiagramId(stop.label);
+                  const isLast = i === plant.containers!.length - 1;
+                  return (
+                    <div
+                      key={i}
+                      onClick={stopDiagramId ? () => { onClose(); setTimeout(() => document.getElementById(stopDiagramId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), MODAL_CLOSE_DELAY_MS); } : undefined}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 12,
+                        padding: '10px 14px',
+                        borderBottom: isLast ? 'none' : '1px solid var(--green-pale)',
+                        cursor: stopDiagramId ? 'pointer' : 'default',
+                        opacity: cfg.dimmed ? 0.55 : 1,
+                      }}
+                      title={stopDiagramId ? 'Click to view in Planting Diagrams' : undefined}
+                    >
+                      {/* Track line + dot */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, paddingTop: 2 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.dot, border: `2px solid ${cfg.dot}`, flexShrink: 0 }} />
+                        {!isLast && <div style={{ width: 2, height: 18, background: 'var(--green-pale)', marginTop: 2 }} />}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={getStatusBadgeStyle(cfg.dot)}>{cfg.label}</span>
+                          <span style={{ fontSize: 13, color: 'var(--ink)', fontWeight: stop.status === 'current' ? 600 : 400 }}>{stop.label}</span>
+                        </div>
+                      </div>
+                      {stopDiagramId && <span style={{ fontSize: 11, color: 'var(--green-mid)', flexShrink: 0, alignSelf: 'center' }}>→</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Single placement fallback */
+              <div
+                onClick={diagramId ? handleContainerClick : undefined}
+                style={{
+                  fontSize: 14,
+                  color: diagramId ? 'var(--green-deep)' : 'var(--ink)',
+                  background: 'var(--green-wash)',
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  fontWeight: 500,
+                  border: `1px solid ${diagramId ? 'var(--green-mid)' : 'var(--green-pale)'}`,
+                  cursor: diagramId ? 'pointer' : 'default',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  transition: 'opacity 0.15s',
+                }}
+                title={diagramId ? 'Click to view in Planting Diagrams' : undefined}
+              >
+                <span>{isPlacementTBD(plant.placement) ? '⏳ Placement TBD — waiting for garden layout' : plant.placement}</span>
+                {diagramId && <span style={{ fontSize: 12, color: 'var(--green-mid)', marginLeft: 8, flexShrink: 0 }}>View diagram →</span>}
+              </div>
+            )}
           </div>
         )}
 

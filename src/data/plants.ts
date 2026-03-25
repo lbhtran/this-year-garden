@@ -5,23 +5,67 @@ export type PlantStage =
   | 'flowering' | 'fruiting' | 'harvesting'
   | 'dormant';
 
+export type ContainerStatus = 'past' | 'current' | 'future';
+
+export interface ContainerStop {
+  label: string;
+  status: ContainerStatus;
+}
+
 export interface Plant {
   id: string;
   emoji: string;
   name: string;
   stage: PlantStage;
   nextStep: string;
+  /** Current container / placement — used for table display, pest lookup, and diagram navigation */
   placement: string;
+  /** Full container journey (past → current → future). When present the detail popup shows a timeline. */
+  containers?: ContainerStop[];
   minTemp?: number;
   frostSensitive?: boolean;
 }
 
 export const initialPlants: Plant[] = [
   // ── Growing now ──
-  { id: '1', emoji: '🍅', name: 'Cherry Tomatoes', stage: 'sprouted', nextStep: 'Thin/prick out at 2 true leaves', placement: 'Corner trellis — Side A', minTemp: 10, frostSensitive: true },
-  { id: '2', emoji: '🍅', name: 'Beef Tomatoes (heirloom)', stage: 'sprouted', nextStep: 'Thin/prick out at 2 true leaves', placement: 'Corner trellis — Side B', minTemp: 10, frostSensitive: true },
-  { id: '3', emoji: '🍆', name: 'Aubergine', stage: 'sprouted', nextStep: 'Thin/prick out at 2 true leaves', placement: 'Pot (~7–10 L) moveable', minTemp: 10, frostSensitive: true },
-  { id: '4', emoji: '🌶️', name: 'Habanero Chillies', stage: 'sprouted', nextStep: 'Thin/prick out at 2–3 true leaves', placement: 'Pot (~7–10 L) moveable', minTemp: 10, frostSensitive: true },
+  {
+    id: '1', emoji: '🍅', name: 'Cherry Tomatoes', stage: 'sprouted',
+    nextStep: 'Thin/prick out at 2 true leaves', placement: 'Corner trellis — Side A',
+    minTemp: 10, frostSensitive: true,
+    containers: [
+      { label: 'Seed tray (indoors)', status: 'past' },
+      { label: 'Individual pot (9 cm) — pricked out', status: 'past' },
+      { label: 'Corner trellis — Side A', status: 'current' },
+    ],
+  },
+  {
+    id: '2', emoji: '🍅', name: 'Beef Tomatoes (heirloom)', stage: 'sprouted',
+    nextStep: 'Thin/prick out at 2 true leaves', placement: 'Corner trellis — Side B',
+    minTemp: 10, frostSensitive: true,
+    containers: [
+      { label: 'Seed tray (indoors)', status: 'past' },
+      { label: 'Individual pot (9 cm) — pricked out', status: 'past' },
+      { label: 'Corner trellis — Side B', status: 'current' },
+    ],
+  },
+  {
+    id: '3', emoji: '🍆', name: 'Aubergine', stage: 'sprouted',
+    nextStep: 'Thin/prick out at 2 true leaves', placement: 'Pot (~7–10 L) moveable',
+    minTemp: 10, frostSensitive: true,
+    containers: [
+      { label: 'Seed tray (indoors)', status: 'past' },
+      { label: 'Pot (~7–10 L) moveable', status: 'current' },
+    ],
+  },
+  {
+    id: '4', emoji: '🌶️', name: 'Habanero Chillies', stage: 'sprouted',
+    nextStep: 'Thin/prick out at 2–3 true leaves', placement: 'Pot (~7–10 L) moveable',
+    minTemp: 10, frostSensitive: true,
+    containers: [
+      { label: 'Seed tray (indoors)', status: 'past' },
+      { label: 'Pot (~7–10 L) moveable', status: 'current' },
+    ],
+  },
   { id: '5', emoji: '🌿', name: 'Basil', stage: 'sprouted', nextStep: 'Thin lightly; separate if crowded', placement: 'Planter 1', minTemp: 15, frostSensitive: true },
   { id: '6', emoji: '🌱', name: 'Parsley', stage: 'sprouted', nextStep: 'Thin lightly', placement: 'Planter 1', minTemp: 0 },
   { id: '7', emoji: '🌼', name: 'Marigolds', stage: 'sprouted', nextStep: 'Thin or separate', placement: 'Corner trellis border', minTemp: 5 },
@@ -29,9 +73,33 @@ export const initialPlants: Plant[] = [
   { id: '9', emoji: '🥬', name: 'Purple Curly Kale', stage: 'sown', nextStep: 'Watch for slugs; fleece if cold', placement: 'Raised Bed 1 outer ring', minTemp: -15 },
   { id: '10', emoji: '🥦', name: 'Tenderstem Broccoli', stage: 'sown', nextStep: 'Watch for slugs carefully!', placement: 'Raised Bed 2 inner ring', minTemp: -5 },
   { id: '11', emoji: '🌸', name: 'Nasturtiums', stage: 'sown', nextStep: 'Frost sensitive — cover if needed', placement: 'Raised Bed 1 & 2 borders', minTemp: 5, frostSensitive: true },
-  { id: '12', emoji: '🍓', name: 'Strawberries', stage: 'sprouted', nextStep: 'Protect from frost', placement: 'Separate pots; growhouse', minTemp: -15 },
-  { id: '13', emoji: '🌿', name: 'Fig', stage: 'dormant', nextStep: 'Keep south-facing; shed in hard frost', placement: 'Patio pot — moveable', minTemp: -10 },
-  { id: '14', emoji: '🥔', name: 'Seed Potatoes', stage: 'chitting', nextStep: 'Plant when shoots reach 1–2cm', placement: 'Grow Bag 1', minTemp: 0 },
+  {
+    id: '12', emoji: '🍓', name: 'Strawberries', stage: 'sprouted',
+    nextStep: 'Protect from frost', placement: 'Separate pots; growhouse',
+    minTemp: -15,
+    containers: [
+      { label: 'Separate pots; growhouse', status: 'current' },
+      { label: 'Patio pots (×3–4) — outside once frost-free', status: 'future' },
+    ],
+  },
+  {
+    id: '13', emoji: '🌿', name: 'Fig', stage: 'dormant',
+    nextStep: 'Keep south-facing; shed in hard frost', placement: 'Patio pot — moveable',
+    minTemp: -10,
+    containers: [
+      { label: 'Patio pot — moveable', status: 'current' },
+      { label: 'Large grow bag (40–50 L) — move in as season progresses', status: 'future' },
+    ],
+  },
+  {
+    id: '14', emoji: '🥔', name: 'Seed Potatoes', stage: 'chitting',
+    nextStep: 'Plant when shoots reach 1–2cm', placement: 'Grow Bag 1',
+    minTemp: 0,
+    containers: [
+      { label: 'Egg boxes / chitting tray (windowsill)', status: 'past' },
+      { label: 'Grow Bag 1', status: 'current' },
+    ],
+  },
   // ── Wishlist — seeds to sow ──
   { id: 'w1', emoji: '🥬', name: 'Pak Choi', stage: 'wishlist', nextStep: 'Joi Choi F1 (bolt-resistant). Sow Apr–Aug directly into Raised Bed 2.', placement: 'Raised Bed 2', minTemp: -2 },
   { id: 'w2', emoji: '🧅', name: 'Spring Onions', stage: 'wishlist', nextStep: 'White Lisbon. Sow successionally every 3 weeks Mar–Jun.', placement: 'Raised Bed 2 outer ring', minTemp: -5 },
