@@ -52,6 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +67,5 @@ jobs:
         run: npm ci
 
       - name: Migrate target database
-        if: ${{ secrets.POSTGRES_URL != '' }}
+        if: env.POSTGRES_URL != ''
         run: npm run migrate
-        env:
-          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
