@@ -2,7 +2,7 @@ export function TimelineSection() {
   return (
     <section className="section" id="timeline">
       <div className="section-header">
-        <span className="section-number">08</span>
+        <span className="section-number">07</span>
         <h2 className="section-title">Seasonal <em>Timeline</em></h2>
       </div>
       <div className="timeline">

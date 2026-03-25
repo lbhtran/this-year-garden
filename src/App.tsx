@@ -9,7 +9,6 @@ import { SeedsSection } from './components/SeedsSection';
 import { ShoppingSection } from './components/ShoppingSection';
 import { PestsSection } from './components/PestsSection';
 import { TemperatureSection } from './components/TemperatureSection';
-import { TreesSection } from './components/TreesSection';
 import { TimelineSection } from './components/TimelineSection';
 import { usePlants } from './hooks/usePlants';
 import { useShopping } from './hooks/useShopping';
@@ -62,7 +61,6 @@ function App() {
         <ShoppingSection items={shoppingItems} onToggle={toggleItem} isSignedIn={!!isSignedIn} />
         <PestsSection />
         <TemperatureSection currentTemp={weather.current?.temperature} />
-        <TreesSection />
         <TimelineSection />
       </main>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Plant, PlantStage } from '../data/plants';
+import type { Plant, PlantStage, ContainerStop, ContainerStatus, ContainerJourney } from '../data/plants';
 import { stageLabels } from '../data/plants';
 
 interface Props {
@@ -8,17 +8,20 @@ interface Props {
   onClose: () => void;
 }
 
-const stages: PlantStage[] = ['sprouted', 'sown', 'chitting', 'dormant', 'hardening-off', 'planted', 'flowering', 'fruiting', 'harvesting'];
+const stages: PlantStage[] = ['wishlist', 'sourced', 'sown', 'sprouted', 'chitting', 'hardening-off', 'planted', 'flowering', 'fruiting', 'harvesting', 'dormant'];
+const containerStatuses: ContainerStatus[] = ['past', 'current', 'future'];
+const containerStatusLabels: Record<ContainerStatus, string> = { past: 'Past', current: 'Now', future: 'Next' };
 
 export function PlantModal({ plant, onSave, onClose }: Props) {
   const isNew = !plant;
-  const [form, setForm] = useState<Plant>(plant || {
-    id: `plant-${Date.now()}`,
+  const [form, setForm] = useState<Plant>(() => plant || {
+    id: `plant-${crypto.randomUUID()}`,
     emoji: '🌱',
     name: '',
-    stage: 'sown',
+    stage: 'wishlist',
     nextStep: '',
     placement: '',
+    containers: [],
     frostSensitive: false,
     minTemp: 0,
   });
@@ -31,11 +34,11 @@ export function PlantModal({ plant, onSave, onClose }: Props) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(26,36,16,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(26,36,16,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 16, overflowY: 'auto' }}
       onClick={onClose}
     >
       <div
-        style={{ background: 'var(--cream)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ background: 'var(--cream)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 520, margin: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -96,6 +99,76 @@ export function PlantModal({ plant, onSave, onClose }: Props) {
               placeholder="e.g. Raised Bed 1"
               style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 14, background: 'white' }}
             />
+          </div>
+
+          {/* Container journeys */}
+          <div>
+            <label style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--muted)', display: 'block', marginBottom: 6 }}>Container Journeys</label>
+            {(form.containers ?? ([] as ContainerJourney[])).map((journey: ContainerJourney, ji: number) => (
+              <div key={ji} style={{ border: '1px solid var(--cream-dark)', borderRadius: 8, padding: '10px 12px', marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--muted)' }}>Journey {ji + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, containers: (f.containers ?? []).filter((_, j) => j !== ji) }))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--muted)', fontFamily: "'DM Mono', monospace", letterSpacing: 1, textTransform: 'uppercase' }}
+                  >✕ Remove</button>
+                </div>
+                {journey.map((stop: ContainerStop, i: number) => (
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '90px 1fr auto', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+                    <select
+                      value={stop.status}
+                      onChange={e => setForm(f => {
+                        const journeys = [...(f.containers ?? [])];
+                        const stops = [...journeys[ji]];
+                        stops[i] = { ...stops[i], status: e.target.value as ContainerStatus };
+                        journeys[ji] = stops;
+                        return { ...f, containers: journeys };
+                      })}
+                      style={{ padding: '7px 8px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 12, background: 'white', cursor: 'pointer' }}
+                    >
+                      {containerStatuses.map(s => <option key={s} value={s}>{containerStatusLabels[s]}</option>)}
+                    </select>
+                    <input
+                      value={stop.label}
+                      onChange={e => setForm(f => {
+                        const journeys = [...(f.containers ?? [])];
+                        const stops = [...journeys[ji]];
+                        stops[i] = { ...stops[i], label: e.target.value };
+                        journeys[ji] = stops;
+                        return { ...f, containers: journeys };
+                      })}
+                      placeholder="e.g. Seed tray (indoors)"
+                      style={{ padding: '7px 10px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, background: 'white' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => {
+                        const journeys = [...(f.containers ?? [])];
+                        journeys[ji] = journeys[ji].filter((_, j) => j !== i);
+                        return { ...f, containers: journeys };
+                      })}
+                      style={{ background: 'none', border: '1px solid var(--cream-dark)', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: 'var(--muted)', padding: '5px 9px' }}
+                      title="Remove this stop"
+                    >✕</button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setForm(f => {
+                    const journeys = [...(f.containers ?? [])];
+                    journeys[ji] = [...journeys[ji], { label: '', status: 'current' as ContainerStatus }];
+                    return { ...f, containers: journeys };
+                  })}
+                  style={{ padding: '5px 12px', border: '1px dashed var(--green-mid)', borderRadius: 8, background: 'transparent', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--green-mid)' }}
+                >+ Add stop</button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setForm(f => ({ ...f, containers: [...(f.containers ?? []), [{ label: '', status: 'current' as ContainerStatus }]] }))}
+              style={{ padding: '7px 14px', border: '1px dashed var(--green-mid)', borderRadius: 8, background: 'transparent', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--green-mid)' }}
+            >+ Add journey</button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
