@@ -3,17 +3,22 @@ import { createRoot } from 'react-dom/client'
 import { ClerkProvider } from '@clerk/clerk-react'
 import './index.css'
 import App from './App.tsx'
+import { ClerkAuthBridge } from './contexts/AuthContext.tsx'
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined
 
-if (!publishableKey) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY environment variable')
-}
+const root = document.getElementById('root')!
 
-createRoot(document.getElementById('root')!).render(
+createRoot(root).render(
   <StrictMode>
-    <ClerkProvider publishableKey={publishableKey}>
+    {publishableKey ? (
+      <ClerkProvider publishableKey={publishableKey}>
+        <ClerkAuthBridge>
+          <App />
+        </ClerkAuthBridge>
+      </ClerkProvider>
+    ) : (
       <App />
-    </ClerkProvider>
+    )}
   </StrictMode>,
 )

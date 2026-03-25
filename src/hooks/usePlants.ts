@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAppAuth } from '../contexts/AuthContext';
 import { initialPlants } from '../data/plants';
 import type { Plant } from '../data/plants';
 
@@ -17,7 +17,7 @@ function toPlant(row: Record<string, unknown>): Plant {
 }
 
 export function usePlants() {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   const [plants, setPlants] = useState<Plant[]>(initialPlants);
   const [loading, setLoading] = useState(true);
 

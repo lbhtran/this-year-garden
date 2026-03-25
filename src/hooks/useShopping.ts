@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAppAuth } from '../contexts/AuthContext';
 import { initialShoppingItems } from '../data/shopping';
 import type { ShoppingItem } from '../data/shopping';
 
@@ -18,7 +18,7 @@ function toShoppingItem(row: Record<string, unknown>): ShoppingItem {
 }
 
 export function useShopping() {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   const [items, setItems] = useState<ShoppingItem[]>(initialShoppingItems);
   const [loading, setLoading] = useState(true);
 

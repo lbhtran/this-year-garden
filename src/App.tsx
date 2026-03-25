@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAppAuth } from './contexts/AuthContext';
 import { Hero } from './components/Hero';
 import { Navigation } from './components/Navigation';
 import { WeatherWidget } from './components/WeatherWidget';
@@ -16,7 +16,7 @@ import { useWeather } from './hooks/useWeather';
 import { initialContainers } from './data/containers';
 
 function App() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn } = useAppAuth();
   const { plants, updatePlant, addPlant, deletePlant } = usePlants();
   const { items: shoppingItems, toggleItem } = useShopping();
   const [activeSection, setActiveSection] = useState('overview');
