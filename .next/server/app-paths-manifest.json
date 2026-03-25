@@ -1,8 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/plants/route": "app/api/plants/route.js",
-  "/api/shopping/[id]/route": "app/api/shopping/[id]/route.js",
-  "/api/shopping/route": "app/api/shopping/route.js",
-  "/api/plants/[id]/route": "app/api/plants/[id]/route.js",
-  "/page": "app/page.js"
-}
