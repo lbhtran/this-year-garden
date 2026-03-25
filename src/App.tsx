@@ -73,8 +73,6 @@ function App() {
           onAddPlant={handleAddPlant}
           onDeletePlant={handleDeletePlant}
           currentWeather={weather.current}
-          shoppingItems={shoppingItems}
-          onToggleShoppingItem={handleToggleShoppingItem}
         />
         <ShoppingSection items={shoppingItems} onToggle={handleToggleShoppingItem} />
         <PestsSection />

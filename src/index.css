@@ -629,6 +629,8 @@ body::before {
 .stage-hardening { background: rgba(200,221,184,0.4) !important; color: var(--green-mid) !important; }
 .stage-flowering { background: rgba(200,168,75,0.15) !important; color: var(--gold) !important; }
 .stage-fruiting { background: rgba(184,92,42,0.15) !important; color: var(--rust) !important; }
+.stage-wishlist { background: rgba(161,120,180,0.2) !important; color: #7a4a9e !important; }
+.stage-sourced { background: rgba(200,168,75,0.3) !important; color: var(--soil) !important; }
 
 /* ── SHOPPING LIST ── */
 .priority-badge {

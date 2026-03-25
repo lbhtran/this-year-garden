@@ -1,4 +1,9 @@
-export type PlantStage = 'sprouted' | 'sown' | 'chitting' | 'dormant' | 'planted' | 'harvesting' | 'hardening-off' | 'flowering' | 'fruiting';
+export type PlantStage =
+  | 'wishlist' | 'sourced'
+  | 'sown' | 'sprouted' | 'chitting'
+  | 'hardening-off' | 'planted'
+  | 'flowering' | 'fruiting' | 'harvesting'
+  | 'dormant';
 
 export interface Plant {
   id: string;
@@ -12,6 +17,7 @@ export interface Plant {
 }
 
 export const initialPlants: Plant[] = [
+  // ── Growing now ──
   { id: '1', emoji: '🍅', name: 'Cherry Tomatoes', stage: 'sprouted', nextStep: 'Thin/prick out at 2 true leaves', placement: 'Corner trellis — Side A', minTemp: 10, frostSensitive: true },
   { id: '2', emoji: '🍅', name: 'Beef Tomatoes (heirloom)', stage: 'sprouted', nextStep: 'Thin/prick out at 2 true leaves', placement: 'Corner trellis — Side B', minTemp: 10, frostSensitive: true },
   { id: '3', emoji: '🍆', name: 'Aubergine', stage: 'sprouted', nextStep: 'Thin/prick out at 2 true leaves', placement: 'Pot (~7–10 L) moveable', minTemp: 10, frostSensitive: true },
@@ -26,21 +32,44 @@ export const initialPlants: Plant[] = [
   { id: '12', emoji: '🍓', name: 'Strawberries', stage: 'sprouted', nextStep: 'Protect from frost', placement: 'Separate pots; growhouse', minTemp: -15 },
   { id: '13', emoji: '🌿', name: 'Fig', stage: 'dormant', nextStep: 'Keep south-facing; shed in hard frost', placement: 'Patio pot — moveable', minTemp: -10 },
   { id: '14', emoji: '🥔', name: 'Seed Potatoes', stage: 'chitting', nextStep: 'Plant when shoots reach 1–2cm', placement: 'Grow Bag 1', minTemp: 0 },
+  // ── Wishlist — seeds to sow ──
+  { id: 'w1', emoji: '🥬', name: 'Pak Choi', stage: 'wishlist', nextStep: 'Joi Choi F1 (bolt-resistant). Sow Apr–Aug directly into Raised Bed 2.', placement: 'Raised Bed 2', minTemp: -2 },
+  { id: 'w2', emoji: '🧅', name: 'Spring Onions', stage: 'wishlist', nextStep: 'White Lisbon. Sow successionally every 3 weeks Mar–Jun.', placement: 'Raised Bed 2 outer ring', minTemp: -5 },
+  { id: 'w3', emoji: '🌿', name: 'Spinach', stage: 'wishlist', nextStep: 'Perpetual Spinach — less prone to bolting. Sow Mar–Jul.', placement: 'Raised Bed 2', minTemp: -10 },
+  { id: 'w4', emoji: '🥒', name: 'Courgette', stage: 'wishlist', nextStep: 'Patio Star F1 or Black Beauty. Sow one seed per pot on its side, indoors Mar–Apr.', placement: 'Individual pot (20 L)', minTemp: 10, frostSensitive: true },
+  { id: 'w5', emoji: '🌿', name: 'Asparagus', stage: 'wishlist', nextStep: "Connover's Colossal or Guelph Millennium. Buy 2yr crowns — plant now!", placement: 'Raised Bed 2 centre', minTemp: -20 },
+  // ── Wishlist — plants to buy ──
+  { id: 'w6', emoji: '🍁', name: 'Japanese Maple', stage: 'wishlist', nextStep: "Buy from specialist nursery. 'Bloodgood' or 'Sango-kaku'. Fully hardy — leave outside year-round.", placement: '≥ 40 L pot', minTemp: -20 },
+  { id: 'w7', emoji: '🥬', name: 'Perennial Kale (Daubenton)', stage: 'wishlist', nextStep: 'Very hardy, reliable UK perennial. Buy ×2 and plant in Raised Bed 1 centre.', placement: 'Raised Bed 1 centre', minTemp: -15 },
+  // ── Wishlist — on hold for future seasons ──
+  { id: 'w8', emoji: '🌿', name: 'Mint', stage: 'wishlist', nextStep: 'Spearmint or Applemint. Pot-in-pot to contain roots.', placement: 'Planter 1 (pot-in-pot)', minTemp: -15 },
+  { id: 'w9', emoji: '🫐', name: 'Blueberries', stage: 'wishlist', nextStep: 'Bluecrop + Duke. Buy two for cross-pollination. Ericaceous compost essential.', placement: '≥ 40 L pots (× 2)', minTemp: -25 },
+  { id: 'w10', emoji: '🫒', name: 'Olive', stage: 'wishlist', nextStep: "Arbequina. Move under cover below -5°C.", placement: '≥ 40–50 L pot', minTemp: -5 },
+  { id: 'w11', emoji: '🌿', name: 'Bay Tree', stage: 'wishlist', nextStep: 'Laurus nobilis. Very low maintenance once established.', placement: '≥ 30 L pot', minTemp: -10 },
+  { id: 'w12', emoji: '🌳', name: 'Mulberry', stage: 'wishlist', nextStep: "Charlotte Russe. Buy from specialist fruit nursery. Mind fruit drop near seating!", placement: '≥ 50 L pot — TBD', minTemp: -15 },
+  // ── Wishlist — future fruit trees ──
+  { id: 'w13', emoji: '🍎', name: 'Apple', stage: 'wishlist', nextStep: "Falstaff on M27 rootstock. Self-fertile; beautiful spring blossom.", placement: 'TBD — garden layout pending', minTemp: -25 },
+  { id: 'w14', emoji: '🍒', name: 'Cherry', stage: 'wishlist', nextStep: "Stella (self-fertile). Great in a large pot; net when fruiting.", placement: 'TBD — garden layout pending', minTemp: -25 },
+  { id: 'w15', emoji: '🍑', name: 'Plum', stage: 'wishlist', nextStep: "Victoria on Pixy rootstock. Very productive; self-fertile.", placement: 'TBD — garden layout pending', minTemp: -25 },
 ];
 
 export const stageLabels: Record<PlantStage, string> = {
-  sprouted: 'Sprouted indoors',
-  sown: 'Direct sown',
+  wishlist: 'On the Wishlist',
+  sourced: 'Seed / Plant Sourced',
+  sown: 'Sown',
+  sprouted: 'Sprouted',
   chitting: 'Chitting',
   dormant: 'Dormant',
-  planted: 'Planted out',
+  planted: 'Planted Out',
   harvesting: 'Harvesting',
-  'hardening-off': 'Hardening off',
+  'hardening-off': 'Hardening Off',
   flowering: 'Flowering',
   fruiting: 'Fruiting',
 };
 
 export const stageColors: Record<PlantStage, string> = {
+  wishlist: 'stage-wishlist',
+  sourced: 'stage-sourced',
   sprouted: 'stage-sprouted',
   sown: 'stage-sown',
   chitting: 'stage-chitting',

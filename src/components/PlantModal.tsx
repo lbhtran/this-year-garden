@@ -8,15 +8,15 @@ interface Props {
   onClose: () => void;
 }
 
-const stages: PlantStage[] = ['sprouted', 'sown', 'chitting', 'dormant', 'hardening-off', 'planted', 'flowering', 'fruiting', 'harvesting'];
+const stages: PlantStage[] = ['wishlist', 'sourced', 'sown', 'sprouted', 'chitting', 'hardening-off', 'planted', 'flowering', 'fruiting', 'harvesting', 'dormant'];
 
 export function PlantModal({ plant, onSave, onClose }: Props) {
   const isNew = !plant;
-  const [form, setForm] = useState<Plant>(plant || {
-    id: `plant-${Date.now()}`,
+  const [form, setForm] = useState<Plant>(() => plant || {
+    id: `plant-${crypto.randomUUID()}`,
     emoji: '🌱',
     name: '',
-    stage: 'sown',
+    stage: 'wishlist',
     nextStep: '',
     placement: '',
     frostSensitive: false,
