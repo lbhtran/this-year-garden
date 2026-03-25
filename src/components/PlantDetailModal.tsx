@@ -134,7 +134,7 @@ export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
             {plant.containers && plant.containers.length > 0 ? (
               /* One card per journey; multiple journeys = parallel locations */
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {plant.containers.map((journey, ji) => (
+                {plant.containers.filter(Array.isArray).map((journey, ji) => (
                   <div
                     key={ji}
                     style={{ background: 'var(--green-wash)', borderRadius: 8, border: '1px solid var(--green-pale)', overflow: 'hidden', position: 'relative' }}

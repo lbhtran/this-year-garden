@@ -12,13 +12,31 @@ import { TimelineSection } from './components/TimelineSection';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useWeather } from './hooks/useWeather';
 import { initialPlants } from './data/plants';
-import type { Plant } from './data/plants';
+import type { Plant, ContainerStop } from './data/plants';
 import { initialShoppingItems } from './data/shopping';
 import type { ShoppingItem } from './data/shopping';
 import { initialContainers } from './data/containers';
 
+/**
+ * Migrate plant data from older localStorage formats to the current schema.
+ * - v1: containers was ContainerStop[] (flat array)
+ * - v2: containers is ContainerJourney[] (ContainerStop[][], array of arrays)
+ */
+function migratePlant(p: unknown): Plant {
+  const plant = p as Plant & { containers?: unknown };
+  if (!plant.containers || !Array.isArray(plant.containers) || plant.containers.length === 0) {
+    return plant as Plant;
+  }
+  const first = plant.containers[0];
+  // Old flat format: first element is a ContainerStop object, not an array
+  if (first && !Array.isArray(first) && typeof first === 'object' && 'label' in (first as object)) {
+    return { ...plant, containers: [plant.containers as unknown as ContainerStop[]] } as Plant;
+  }
+  return plant as Plant;
+}
+
 function App() {
-  const [plants, setPlants] = useLocalStorage<Plant[]>('garden-plants', initialPlants);
+  const [plants, setPlants] = useLocalStorage<Plant[]>('garden-plants', initialPlants, arr => arr.map(migratePlant));
   const [shoppingItems, setShoppingItems] = useLocalStorage<ShoppingItem[]>('garden-shopping', initialShoppingItems);
   const [activeSection, setActiveSection] = useState('overview');
   const weather = useWeather();
