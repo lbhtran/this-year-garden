@@ -16,12 +16,23 @@ Copy `.env.example` to `.env.local` and fill in your values.
 
 ### Running migrations locally
 
+To create the tables on your **Neon instance** (or any Postgres), set `POSTGRES_URL` in `.env.local` and run:
+
 ```bash
-POSTGRES_URL=postgresql://user:pass@host/db npm run migrate
+npm run migrate
+```
+
+Or pass the URL inline:
+
+```bash
+POSTGRES_URL="postgresql://user:pass@host/db" npm run migrate
 ```
 
 Migrations are stored in `migrations/` and tracked in a `schema_migrations` table.
 Re-running `npm run migrate` is safe — already-applied migrations are skipped.
+
+> **Note:** CI runs migrations against a temporary local Postgres container, not your Neon instance.
+> You need to run `npm run migrate` once against your Neon URL to create the tables there.
 
 ### Running DB integration tests locally
 

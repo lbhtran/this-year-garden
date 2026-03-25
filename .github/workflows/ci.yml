@@ -28,6 +28,7 @@ jobs:
 
     env:
       POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/garden_test
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - uses: actions/checkout@v4
