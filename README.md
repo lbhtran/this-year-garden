@@ -31,9 +31,6 @@ POSTGRES_URL="postgresql://user:pass@host/db" npm run migrate
 Migrations are stored in `migrations/` and tracked in a `schema_migrations` table.
 Re-running `npm run migrate` is safe — already-applied migrations are skipped.
 
-> **Note:** CI runs migrations against a temporary local Postgres container, not your Neon instance.
-> You need to run `npm run migrate` once against your Neon URL to create the tables there.
-
 ### Running DB integration tests locally
 
 ```bash
@@ -44,13 +41,18 @@ The test inserts rows for two synthetic users and asserts that each user can onl
 
 ## CI
 
-The GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push and pull request:
+The GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push and pull request with two jobs:
 
-1. Starts a local Postgres service container.
-2. Installs dependencies with `npm ci`.
-3. Applies migrations with `npm run migrate`.
-4. Runs ownership isolation tests with `npm run test:db`.
+### `test-db` — integration tests
+Starts a local Postgres 16 service, applies migrations, and runs ownership isolation tests. No real database credentials required.
 
-No Clerk secrets are required for CI — the DB tests are independent of authentication.
+### `migrate-target` — target database migration
+Runs `npm run migrate` against your real Neon database. This job is skipped if the `POSTGRES_URL` secret is not set.
+
+**To enable target database migrations in CI**, add `POSTGRES_URL` as a GitHub Actions repository secret (Settings → Secrets and variables → Actions):
+- Point it at your Neon connection string for production.
+- For separate preview/production environments, use GitHub Environments and set `POSTGRES_URL` per environment.
+
+No Clerk secrets are required for either CI job.
 
 
