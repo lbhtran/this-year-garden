@@ -108,11 +108,11 @@ export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(26,36,16,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(26,36,16,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 16, overflowY: 'auto' }}
       onClick={onClose}
     >
       <div
-        style={{ background: 'var(--cream)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ background: 'var(--cream)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 520, margin: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -132,42 +132,63 @@ export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
           <div style={{ marginBottom: 20 }}>
             <span style={labelStyle}>🪴 Container</span>
             {plant.containers && plant.containers.length > 0 ? (
-              /* Journey timeline */
-              <div style={{ background: 'var(--green-wash)', borderRadius: 8, border: '1px solid var(--green-pale)', overflow: 'hidden' }}>
-                {plant.containers.map((stop, i) => {
-                  const cfg = CONTAINER_STATUS_CONFIG[stop.status];
-                  const stopDiagramId = getDiagramId(stop.label);
-                  const isLast = i === plant.containers!.length - 1;
-                  return (
-                    <div
-                      key={i}
-                      onClick={stopDiagramId ? () => { onClose(); setTimeout(() => document.getElementById(stopDiagramId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), MODAL_CLOSE_DELAY_MS); } : undefined}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 12,
-                        padding: '10px 14px',
-                        borderBottom: isLast ? 'none' : '1px solid var(--green-pale)',
-                        cursor: stopDiagramId ? 'pointer' : 'default',
-                        opacity: cfg.dimmed ? 0.55 : 1,
-                      }}
-                      title={stopDiagramId ? 'Click to view in Planting Diagrams' : undefined}
-                    >
-                      {/* Track line + dot */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, paddingTop: 2 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.dot, border: `2px solid ${cfg.dot}`, flexShrink: 0 }} />
-                        {!isLast && <div style={{ width: 2, height: 18, background: 'var(--green-pale)', marginTop: 2 }} />}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <span style={getStatusBadgeStyle(cfg.dot)}>{cfg.label}</span>
-                          <span style={{ fontSize: 13, color: 'var(--ink)', fontWeight: stop.status === 'current' ? 600 : 400 }}>{stop.label}</span>
+              /* One card per journey; multiple journeys = parallel locations */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {plant.containers.map((journey, ji) => (
+                  <div
+                    key={ji}
+                    style={{ background: 'var(--green-wash)', borderRadius: 8, border: '1px solid var(--green-pale)', overflow: 'hidden', position: 'relative' }}
+                  >
+                    {/* Single continuous connector line behind all dots */}
+                    {journey.length > 1 && (
+                      <div style={{ position: 'absolute', left: 18, top: 17, bottom: 17, width: 2, background: 'var(--green-pale)', zIndex: 0 }} />
+                    )}
+                    {journey.map((stop: ContainerStop, i: number) => {
+                      const cfg = CONTAINER_STATUS_CONFIG[stop.status];
+                      const stopDiagramId = getDiagramId(stop.label);
+                      const isLast = i === journey.length - 1;
+                      return (
+                        <div
+                          key={i}
+                          onClick={stopDiagramId ? () => { onClose(); setTimeout(() => document.getElementById(stopDiagramId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), MODAL_CLOSE_DELAY_MS); } : undefined}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 12,
+                            padding: '10px 14px',
+                            borderBottom: isLast ? 'none' : '1px solid var(--green-pale)',
+                            cursor: stopDiagramId ? 'pointer' : 'default',
+                            opacity: cfg.dimmed ? 0.55 : 1,
+                            position: 'relative',
+                            zIndex: 1,
+                          }}
+                          title={stopDiagramId ? 'Click to view in Planting Diagrams' : undefined}
+                        >
+                          {/* Dot — box-shadow masks the connector line behind it */}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', flexShrink: 0, paddingTop: 2 }}>
+                            <div style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: '50%',
+                              background: cfg.dot,
+                              flexShrink: 0,
+                              position: 'relative',
+                              zIndex: 2,
+                              boxShadow: '0 0 0 3px var(--green-wash)',
+                            }} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={getStatusBadgeStyle(cfg.dot)}>{cfg.label}</span>
+                              <span style={{ fontSize: 13, color: 'var(--ink)', fontWeight: stop.status === 'current' ? 600 : 400 }}>{stop.label}</span>
+                            </div>
+                          </div>
+                          {stopDiagramId && <span style={{ fontSize: 11, color: 'var(--green-mid)', flexShrink: 0, alignSelf: 'center' }}>→</span>}
                         </div>
-                      </div>
-                      {stopDiagramId && <span style={{ fontSize: 11, color: 'var(--green-mid)', flexShrink: 0, alignSelf: 'center' }}>→</span>}
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
             ) : (
               /* Single placement fallback */
