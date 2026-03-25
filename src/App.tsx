@@ -1,4 +1,6 @@
+'use client';
 import { useState, useEffect } from 'react';
+import { useAppAuth } from './contexts/AuthContext';
 import { Hero } from './components/Hero';
 import { Navigation } from './components/Navigation';
 import { WeatherWidget } from './components/WeatherWidget';
@@ -9,35 +11,15 @@ import { ShoppingSection } from './components/ShoppingSection';
 import { PestsSection } from './components/PestsSection';
 import { TemperatureSection } from './components/TemperatureSection';
 import { TimelineSection } from './components/TimelineSection';
-import { useLocalStorage } from './hooks/useLocalStorage';
+import { usePlants } from './hooks/usePlants';
+import { useShopping } from './hooks/useShopping';
 import { useWeather } from './hooks/useWeather';
-import { initialPlants } from './data/plants';
-import type { Plant, ContainerStop } from './data/plants';
-import { initialShoppingItems } from './data/shopping';
-import type { ShoppingItem } from './data/shopping';
 import { initialContainers } from './data/containers';
 
-/**
- * Migrate plant data from older localStorage formats to the current schema.
- * - v1: containers was ContainerStop[] (flat array)
- * - v2: containers is ContainerJourney[] (ContainerStop[][], array of arrays)
- */
-function migratePlant(p: unknown): Plant {
-  const plant = p as Plant & { containers?: unknown };
-  if (!plant.containers || !Array.isArray(plant.containers) || plant.containers.length === 0) {
-    return plant as Plant;
-  }
-  const first = plant.containers[0];
-  // Old flat format: first element is a ContainerStop object, not an array
-  if (first && !Array.isArray(first) && typeof first === 'object' && 'label' in (first as object)) {
-    return { ...plant, containers: [plant.containers as unknown as ContainerStop[]] } as Plant;
-  }
-  return plant as Plant;
-}
-
 function App() {
-  const [plants, setPlants] = useLocalStorage<Plant[]>('garden-plants', initialPlants, arr => arr.map(migratePlant));
-  const [shoppingItems, setShoppingItems] = useLocalStorage<ShoppingItem[]>('garden-shopping', initialShoppingItems);
+  const { isSignedIn } = useAppAuth();
+  const { plants, updatePlant, addPlant, deletePlant } = usePlants();
+  const { items: shoppingItems, toggleItem } = useShopping();
   const [activeSection, setActiveSection] = useState('overview');
   const weather = useWeather();
 
@@ -57,22 +39,6 @@ function App() {
     return () => observer.disconnect();
   }, []);
 
-  const handleUpdatePlant = (updated: Plant) => {
-    setPlants(prev => prev.map(p => p.id === updated.id ? updated : p));
-  };
-
-  const handleAddPlant = (plant: Plant) => {
-    setPlants(prev => [...prev, plant]);
-  };
-
-  const handleDeletePlant = (id: string) => {
-    setPlants(prev => prev.filter(p => p.id !== id));
-  };
-
-  const handleToggleShoppingItem = (id: string) => {
-    setShoppingItems(prev => prev.map(item => item.id === id ? { ...item, bought: !item.bought } : item));
-  };
-
   return (
     <>
       <Hero />
@@ -87,12 +53,13 @@ function App() {
         <DiagramsSection />
         <SeedsSection
           plants={plants}
-          onUpdatePlant={handleUpdatePlant}
-          onAddPlant={handleAddPlant}
-          onDeletePlant={handleDeletePlant}
+          onUpdatePlant={updatePlant}
+          onAddPlant={addPlant}
+          onDeletePlant={deletePlant}
           currentWeather={weather.current}
+          isSignedIn={!!isSignedIn}
         />
-        <ShoppingSection items={shoppingItems} onToggle={handleToggleShoppingItem} />
+        <ShoppingSection items={shoppingItems} onToggle={toggleItem} isSignedIn={!!isSignedIn} />
         <PestsSection />
         <TemperatureSection currentTemp={weather.current?.temperature} />
         <TimelineSection />

@@ -13,6 +13,7 @@ interface Props {
   onAddPlant: (plant: Plant) => void;
   onDeletePlant: (id: string) => void;
   currentWeather: WeatherData | null;
+  isSignedIn: boolean;
 }
 
 const stageOrder: PlantStage[] = [
@@ -26,7 +27,7 @@ const stageOrder: PlantStage[] = [
 const growingStages = new Set<PlantStage>(['sown', 'sprouted', 'chitting', 'hardening-off', 'planted', 'flowering', 'fruiting', 'harvesting', 'dormant']);
 const wishlistStages = new Set<PlantStage>(['wishlist', 'sourced']);
 
-export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant, currentWeather }: Props) {
+export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant, currentWeather, isSignedIn }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('growing');
   const [filter, setFilter] = useState('');
   const [editingPlant, setEditingPlant] = useState<Plant | null>(null);
@@ -120,12 +121,14 @@ export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant,
           placeholder="🔍 Filter by plant name or placement..."
           style={{ flex: 1, minWidth: 200, padding: '10px 14px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, background: 'white', color: 'var(--ink)' }}
         />
-        <button
-          onClick={() => setShowAddModal(true)}
-          style={{ padding: '10px 20px', background: 'var(--green-deep)', border: 'none', borderRadius: 8, color: 'var(--cream)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap' }}
-        >
-          + Add Plant
-        </button>
+        {isSignedIn && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{ padding: '10px 20px', background: 'var(--green-deep)', border: 'none', borderRadius: 8, color: 'var(--cream)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap' }}
+          >
+            + Add Plant
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -156,10 +159,10 @@ export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant,
                 </td>
                 <td>
                   <button
-                    onClick={e => cycleStage(plant, e)}
+                    onClick={e => { e.stopPropagation(); if (isSignedIn) cycleStage(plant, e); }}
                     className={`stage-badge ${stageColors[plant.stage]}`}
-                    title="Click to advance stage"
-                    style={{ cursor: 'pointer', border: 'none', display: 'inline-block' }}
+                    title={isSignedIn ? 'Click to advance stage' : 'Sign in to edit'}
+                    style={{ cursor: isSignedIn ? 'pointer' : 'default', border: 'none', display: 'inline-block' }}
                   >
                     {stageLabels[plant.stage]}
                   </button>
@@ -167,18 +170,20 @@ export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant,
                 <td>{plant.nextStep}</td>
                 <td>{plant.placement}</td>
                 <td>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button
-                      onClick={e => { e.stopPropagation(); setEditingPlant(plant); }}
-                      style={{ padding: '4px 7px', background: 'var(--green-wash)', border: '1px solid var(--green-pale)', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: 'var(--green-deep)' }}
-                      title="Edit"
-                    >✏️</button>
-                    <button
-                      onClick={e => { e.stopPropagation(); if (window.confirm(`Remove ${plant.name}?`)) onDeletePlant(plant.id); }}
-                      style={{ padding: '4px 7px', background: 'rgba(184,92,42,0.1)', border: '1px solid rgba(184,92,42,0.2)', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: 'var(--rust)' }}
-                      title="Delete"
-                    >🗑️</button>
-                  </div>
+                  {isSignedIn && (
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button
+                        onClick={e => { e.stopPropagation(); setEditingPlant(plant); }}
+                        style={{ padding: '4px 7px', background: 'var(--green-wash)', border: '1px solid var(--green-pale)', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: 'var(--green-deep)' }}
+                        title="Edit"
+                      >✏️</button>
+                      <button
+                        onClick={e => { e.stopPropagation(); if (window.confirm(`Remove ${plant.name}?`)) onDeletePlant(plant.id); }}
+                        style={{ padding: '4px 7px', background: 'rgba(184,92,42,0.1)', border: '1px solid rgba(184,92,42,0.2)', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: 'var(--rust)' }}
+                        title="Delete"
+                      >🗑️</button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

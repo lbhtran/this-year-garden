@@ -4,6 +4,7 @@ import type { ShoppingItem } from '../data/shopping';
 interface Props {
   items: ShoppingItem[];
   onToggle: (id: string) => void;
+  isSignedIn: boolean;
 }
 
 const categoryTitles: Record<string, string> = {
@@ -11,7 +12,7 @@ const categoryTitles: Record<string, string> = {
   supplies: '🪴 Compost & Supplies',
 };
 
-export function ShoppingSection({ items, onToggle }: Props) {
+export function ShoppingSection({ items, onToggle, isSignedIn }: Props) {
   const [showBought, setShowBought] = useState(false);
 
   const supplyItems = items.filter(i =>
@@ -64,8 +65,9 @@ export function ShoppingSection({ items, onToggle }: Props) {
               <div
                 key={item.id}
                 className="shop-item"
-                style={{ opacity: item.bought ? 0.6 : 1, cursor: 'pointer', transition: 'all 0.2s', position: 'relative', userSelect: 'none' }}
-                onClick={() => onToggle(item.id)}
+                style={{ opacity: item.bought ? 0.6 : 1, cursor: isSignedIn ? 'pointer' : 'default', transition: 'all 0.2s', position: 'relative', userSelect: 'none' }}
+                onClick={() => isSignedIn && onToggle(item.id)}
+                title={isSignedIn ? undefined : 'Sign in to tick off items'}
               >
                 {item.bought && (
                   <div style={{ position: 'absolute', top: 12, right: 12, width: 22, height: 22, background: 'var(--green-mid)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12 }}>✓</div>
