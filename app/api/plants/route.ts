@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { neon } from '@neondatabase/serverless';
+import { getAuthenticatedUserId } from '../_auth';
 
 export async function GET() {
   const sql = neon(process.env.POSTGRES_URL!);
@@ -9,7 +9,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
+  const userId = await getAuthenticatedUserId(request);
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
