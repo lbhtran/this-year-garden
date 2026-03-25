@@ -46,8 +46,26 @@ const getTempInfo = (minTemp: number, frostSensitive?: boolean): TempInfo => {
 
 const isPlacementTBD = (placement: string) => !placement.trim() || placement.toLowerCase().includes('tbd');
 
+const DIAGRAM_RULES: Array<{ keywords: string[]; id: string }> = [
+  { keywords: ['corner trellis', 'trellis', 'corner'], id: 'diagram-c1' },
+  { keywords: ['planter 1'], id: 'diagram-c2' },
+  { keywords: ['planter 2'], id: 'diagram-c3' },
+  { keywords: ['raised bed 1'], id: 'diagram-c4' },
+  { keywords: ['raised bed 2', 'raised bed'], id: 'diagram-c5' },
+  { keywords: ['grow bag'], id: 'diagram-growbags' },
+  { keywords: ['pot', 'pots', 'patio'], id: 'diagram-pots' },
+];
+
+const getDiagramId = (placement: string): string | null => {
+  if (isPlacementTBD(placement)) return null;
+  const p = placement.toLowerCase();
+  return DIAGRAM_RULES.find(rule => rule.keywords.some(kw => p.includes(kw)))?.id ?? null;
+};
+
+/** Small delay (ms) to let the modal unmount before scrolling, so the target element is unobscured */
+const MODAL_CLOSE_DELAY_MS = 50;
+
 const labelStyle = {
-  fontFamily: "'DM Mono', monospace" as const,
   fontSize: 10,
   letterSpacing: 1.5,
   textTransform: 'uppercase' as const,
@@ -60,6 +78,13 @@ export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
   const showPest = plant.placement && !isPlacementTBD(plant.placement);
   const temp = plant.minTemp !== undefined ? getTempInfo(plant.minTemp, plant.frostSensitive) : null;
   const pest = showPest ? getPestInfo(plant.placement) : null;
+  const diagramId = plant.placement ? getDiagramId(plant.placement) : null;
+
+  const handleContainerClick = () => {
+    if (!diagramId) return;
+    onClose();
+    setTimeout(() => document.getElementById(diagramId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), MODAL_CLOSE_DELAY_MS);
+  };
 
   return (
     <div
@@ -86,8 +111,26 @@ export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
         {plant.placement && (
           <div style={{ marginBottom: 20 }}>
             <span style={labelStyle}>🪴 Container</span>
-            <div style={{ fontSize: 14, color: 'var(--ink)', background: 'var(--green-wash)', borderRadius: 8, padding: '10px 14px', fontWeight: 500, border: '1px solid var(--green-pale)' }}>
-              {isPlacementTBD(plant.placement) ? '⏳ Placement TBD — waiting for garden layout' : plant.placement}
+            <div
+              onClick={diagramId ? handleContainerClick : undefined}
+              style={{
+                fontSize: 14,
+                color: diagramId ? 'var(--green-deep)' : 'var(--ink)',
+                background: 'var(--green-wash)',
+                borderRadius: 8,
+                padding: '10px 14px',
+                fontWeight: 500,
+                border: `1px solid ${diagramId ? 'var(--green-mid)' : 'var(--green-pale)'}`,
+                cursor: diagramId ? 'pointer' : 'default',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                transition: 'opacity 0.15s',
+              }}
+              title={diagramId ? 'Click to view in Planting Diagrams' : undefined}
+            >
+              <span>{isPlacementTBD(plant.placement) ? '⏳ Placement TBD — waiting for garden layout' : plant.placement}</span>
+              {diagramId && <span style={{ fontSize: 12, color: 'var(--green-mid)', marginLeft: 8, flexShrink: 0 }}>View diagram →</span>}
             </div>
           </div>
         )}
