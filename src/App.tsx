@@ -8,7 +8,6 @@ import { SeedsSection } from './components/SeedsSection';
 import { ShoppingSection } from './components/ShoppingSection';
 import { PestsSection } from './components/PestsSection';
 import { TemperatureSection } from './components/TemperatureSection';
-import { TreesSection } from './components/TreesSection';
 import { TimelineSection } from './components/TimelineSection';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useWeather } from './hooks/useWeather';
@@ -74,11 +73,12 @@ function App() {
           onAddPlant={handleAddPlant}
           onDeletePlant={handleDeletePlant}
           currentWeather={weather.current}
+          shoppingItems={shoppingItems}
+          onToggleShoppingItem={handleToggleShoppingItem}
         />
         <ShoppingSection items={shoppingItems} onToggle={handleToggleShoppingItem} />
         <PestsSection />
         <TemperatureSection currentTemp={weather.current?.temperature} />
-        <TreesSection />
         <TimelineSection />
       </main>
 

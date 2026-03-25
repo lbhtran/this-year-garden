@@ -5,11 +5,10 @@ interface Props {
 const navItems = [
   { id: 'overview', label: 'Overview' },
   { id: 'diagrams', label: 'Diagrams' },
-  { id: 'seeds', label: 'Seeds' },
-  { id: 'shopping', label: 'Shopping' },
+  { id: 'seeds', label: 'Plants' },
+  { id: 'shopping', label: 'Supplies' },
   { id: 'pests', label: 'Pests' },
   { id: 'temps', label: 'Temperature' },
-  { id: 'trees', label: 'Future Trees' },
   { id: 'timeline', label: 'Timeline' },
 ];
 
