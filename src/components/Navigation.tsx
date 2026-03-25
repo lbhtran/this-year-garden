@@ -1,3 +1,5 @@
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
+
 interface Props {
   activeSection: string;
 }
@@ -29,6 +31,16 @@ export function Navigation({ activeSection }: Props) {
           {item.label}
         </button>
       ))}
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button className="nav-btn" style={{ whiteSpace: 'nowrap' }}>Sign In</button>
+          </SignInButton>
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+      </div>
     </nav>
   );
 }
