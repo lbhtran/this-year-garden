@@ -1,73 +1,45 @@
-# React + TypeScript + Vite
+# This Year Garden
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A garden planning app built with Next.js, Clerk authentication, and Neon Postgres.
 
-Currently, two official plugins are available:
+## Database setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Required environment variables
 
-## React Compiler
+| Variable | Description |
+|---|---|
+| `POSTGRES_URL` | Postgres connection string (Neon or any Postgres instance) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
+| `CLERK_SECRET_KEY` | Clerk secret key |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Copy `.env.example` to `.env.local` and fill in your values.
 
-## Expanding the ESLint configuration
+### Running migrations locally
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+POSTGRES_URL=postgresql://user:pass@host/db npm run migrate
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Migrations are stored in `migrations/` and tracked in a `schema_migrations` table.
+Re-running `npm run migrate` is safe — already-applied migrations are skipped.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Running DB integration tests locally
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+POSTGRES_URL=postgresql://user:pass@host/db npm run test:db
 ```
+
+The test inserts rows for two synthetic users and asserts that each user can only see their own data, then cleans up.
+
+## CI
+
+The GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push and pull request:
+
+1. Starts a local Postgres service container.
+2. Installs dependencies with `npm ci`.
+3. Applies migrations with `npm run migrate`.
+4. Runs ownership isolation tests with `npm run test:db`.
+
+No Clerk secrets are required for CI — the DB tests are independent of authentication.
+
+
