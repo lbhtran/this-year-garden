@@ -48,7 +48,7 @@ export function getWeatherInfo(code: number) {
   return WMO_CODES[code] || { label: 'Unknown', emoji: '🌡️' };
 }
 
-export function useWeather(lat = 51.5, lon = -0.12): WeatherForecast {
+export function useWeather(lat = 52.04, lon = -0.76): WeatherForecast {
   const [data, setData] = useState<WeatherForecast>({ current: null, daily: [], loading: true, error: null });
 
   useEffect(() => {
