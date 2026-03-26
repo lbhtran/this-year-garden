@@ -51,15 +51,20 @@ export function ShoppingSection({ items, onToggle, isSignedIn }: Props) {
 
       {/* Show/hide bought toggle */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
-        {clerkEnabled && !isSignedIn ? (
-          <SignInButton mode="modal">
-            <button style={{ padding: '7px 16px', borderRadius: 20, border: '1px solid var(--green-mid)', background: 'none', color: 'var(--green-deep)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 0.5 }}>
+        {!isSignedIn && (
+          clerkEnabled ? (
+            <SignInButton mode="modal">
+              <button style={{ padding: '7px 16px', borderRadius: 20, border: '1px solid var(--green-mid)', background: 'none', color: 'var(--green-deep)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 0.5 }}>
+                Sign in to track purchases
+              </button>
+            </SignInButton>
+          ) : (
+            <button disabled style={{ padding: '7px 16px', borderRadius: 20, border: '1px solid var(--cream-dark)', background: 'none', color: 'var(--muted)', cursor: 'default', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 0.5, opacity: 0.6 }}>
               Sign in to track purchases
             </button>
-          </SignInButton>
-        ) : (
-          <div />
+          )
         )}
+        {isSignedIn && <div />}
         <button
           onClick={() => setShowBought(b => !b)}
           style={{ padding: '7px 14px', borderRadius: 20, border: '1px solid', borderColor: showBought ? 'var(--green-mid)' : 'var(--cream-dark)', background: showBought ? 'rgba(74,122,50,0.1)' : 'white', color: showBought ? 'var(--green-deep)' : 'var(--muted)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 0.5 }}
