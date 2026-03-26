@@ -133,12 +133,18 @@ export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant,
             + Add Plant
           </button>
         )}
-        {clerkEnabled && !isSignedIn && (
-          <SignInButton mode="modal">
-            <button style={{ padding: '10px 20px', background: 'none', border: '1px solid var(--green-mid)', borderRadius: 8, color: 'var(--green-deep)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+        {!isSignedIn && (
+          clerkEnabled ? (
+            <SignInButton mode="modal">
+              <button style={{ padding: '10px 20px', background: 'none', border: '1px solid var(--green-mid)', borderRadius: 8, color: 'var(--green-deep)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                Sign in to manage
+              </button>
+            </SignInButton>
+          ) : (
+            <button disabled style={{ padding: '10px 20px', background: 'none', border: '1px solid var(--green-pale)', borderRadius: 8, color: 'var(--muted)', cursor: 'default', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap', opacity: 0.6 }}>
               Sign in to manage
             </button>
-          </SignInButton>
+          )
         )}
       </div>
 
