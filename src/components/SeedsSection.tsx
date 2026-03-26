@@ -1,9 +1,12 @@
+'use client';
 import { useState } from 'react';
+import { SignInButton } from '@clerk/nextjs';
 import type { Plant, PlantStage } from '../data/plants';
 import { stageLabels, stageColors } from '../data/plants';
 import { PlantModal } from './PlantModal';
 import { PlantDetailModal } from './PlantDetailModal';
 import type { WeatherData } from '../hooks/useWeather';
+import { useAppAuth } from '../contexts/AuthContext';
 
 type Tab = 'all' | 'growing' | 'wishlist';
 
@@ -28,6 +31,7 @@ const growingStages = new Set<PlantStage>(['sown', 'sprouted', 'chitting', 'hard
 const wishlistStages = new Set<PlantStage>(['wishlist', 'sourced']);
 
 export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant, currentWeather, isSignedIn }: Props) {
+  const { clerkEnabled } = useAppAuth();
   const [activeTab, setActiveTab] = useState<Tab>('growing');
   const [filter, setFilter] = useState('');
   const [editingPlant, setEditingPlant] = useState<Plant | null>(null);
@@ -128,6 +132,13 @@ export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant,
           >
             + Add Plant
           </button>
+        )}
+        {clerkEnabled && !isSignedIn && (
+          <SignInButton mode="modal">
+            <button style={{ padding: '10px 20px', background: 'none', border: '1px solid var(--green-mid)', borderRadius: 8, color: 'var(--green-deep)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+              Sign in to manage
+            </button>
+          </SignInButton>
         )}
       </div>
 
