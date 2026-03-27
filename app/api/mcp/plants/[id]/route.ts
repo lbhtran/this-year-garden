@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { isMcpAuthenticated } from '../../../_mcp-auth';
+import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../../_mcp-auth';
+
+export function OPTIONS() {
+  return handleOptions();
+}
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   if (!isMcpAuthenticated(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   const { id } = await params;
   const sql = neon(process.env.POSTGRES_URL!);
@@ -33,8 +37,8 @@ export async function PUT(
     WHERE id = ${id}
     RETURNING *
   `;
-  if (rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(rows[0]);
+  if (rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404, headers: corsHeaders });
+  return NextResponse.json(rows[0], { headers: corsHeaders });
 }
 
 export async function DELETE(
@@ -42,10 +46,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   if (!isMcpAuthenticated(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   const { id } = await params;
   const sql = neon(process.env.POSTGRES_URL!);
   await sql`DELETE FROM plants WHERE id = ${id}`;
-  return new NextResponse(null, { status: 204 });
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
 }

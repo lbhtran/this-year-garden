@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { isMcpAuthenticated } from '../../_mcp-auth';
+import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../_mcp-auth';
+
+export function OPTIONS() {
+  return handleOptions();
+}
 
 export async function GET(request: Request) {
   if (!isMcpAuthenticated(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   const sql = neon(process.env.POSTGRES_URL!);
   const rows = await sql`SELECT * FROM plants ORDER BY id`;
-  return NextResponse.json(rows);
+  return NextResponse.json(rows, { headers: corsHeaders });
 }
 
 export async function POST(request: Request) {
   if (!isMcpAuthenticated(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   const sql = neon(process.env.POSTGRES_URL!);
   const body = (await request.json()) as {
@@ -41,5 +45,5 @@ export async function POST(request: Request) {
       updated_at = NOW()
     RETURNING *
   `;
-  return NextResponse.json(rows[0]);
+  return NextResponse.json(rows[0], { headers: corsHeaders });
 }
