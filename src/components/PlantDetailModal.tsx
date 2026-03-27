@@ -1,6 +1,9 @@
+'use client';
 import React from 'react';
+import { SignInButton } from '@clerk/nextjs';
 import type { Plant, ContainerStop } from '../data/plants';
 import { stageLabels, stageColors } from '../data/plants';
+import { useAppAuth } from '../contexts/AuthContext';
 
 interface Props {
   plant: Plant;
@@ -93,6 +96,73 @@ const labelStyle = {
   marginBottom: 8,
   display: 'block',
 };
+
+const editBtnBaseStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '12px',
+  borderRadius: 8,
+  fontFamily: "'DM Mono', monospace",
+  fontSize: 12,
+  letterSpacing: 1,
+  textTransform: 'uppercase',
+  fontWeight: 500,
+};
+
+const editBtnSignedInStyle: React.CSSProperties = {
+  ...editBtnBaseStyle,
+  border: 'none',
+  background: 'var(--green-deep)',
+  color: 'var(--cream)',
+  cursor: 'pointer',
+};
+
+const editBtnSignInStyle: React.CSSProperties = {
+  ...editBtnBaseStyle,
+  border: '1px solid var(--green-mid)',
+  background: 'none',
+  color: 'var(--green-deep)',
+  cursor: 'pointer',
+};
+
+const editBtnDisabledStyle: React.CSSProperties = {
+  ...editBtnBaseStyle,
+  border: '1px solid var(--cream-dark)',
+  background: 'none',
+  color: 'var(--muted)',
+  cursor: 'default',
+  opacity: 0.6,
+};
+
+function EditPlantButton({ plant, onClose, onEdit }: { plant: Plant; onClose: () => void; onEdit: (p: Plant) => void }) {
+  const { clerkEnabled, isSignedIn } = useAppAuth();
+
+  if (isSignedIn) {
+    return (
+      <button
+        onClick={() => { onClose(); onEdit(plant); }}
+        style={editBtnSignedInStyle}
+      >
+        ✏️ Edit Plant
+      </button>
+    );
+  }
+
+  if (clerkEnabled) {
+    return (
+      <SignInButton mode="modal">
+        <button style={editBtnSignInStyle}>
+          Sign in to edit
+        </button>
+      </SignInButton>
+    );
+  }
+
+  return (
+    <button disabled style={editBtnDisabledStyle}>
+      Sign in to edit
+    </button>
+  );
+}
 
 export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
   const showPest = plant.placement && !isPlacementTBD(plant.placement);
@@ -264,13 +334,8 @@ export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
           </div>
         )}
 
-        {/* Edit button */}
-        <button
-          onClick={() => { onClose(); onEdit(plant); }}
-          style={{ width: '100%', padding: '12px', border: 'none', borderRadius: 8, background: 'var(--green-deep)', cursor: 'pointer', fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--cream)', fontWeight: 500 }}
-        >
-          ✏️ Edit Plant
-        </button>
+        {/* Edit button — auth-gated */}
+        <EditPlantButton plant={plant} onClose={onClose} onEdit={onEdit} />
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+'use client';
+import React from 'react';
+import { SignInButton, UserButton } from '@clerk/nextjs';
 import { useAppAuth } from '../contexts/AuthContext';
 
 interface Props {
@@ -15,8 +17,23 @@ const navItems = [
   { id: 'timeline', label: 'Timeline' },
 ];
 
+const signInBtnStyle: React.CSSProperties = {
+  fontFamily: "'DM Mono', monospace",
+  fontSize: 11,
+  letterSpacing: 1.5,
+  textTransform: 'uppercase',
+  color: 'var(--green-deep)',
+  background: 'none',
+  border: '1px solid var(--green-mid)',
+  borderRadius: 4,
+  padding: '6px 16px',
+  cursor: 'pointer',
+  transition: 'all 0.2s',
+  whiteSpace: 'nowrap',
+};
+
 export function Navigation({ activeSection }: Props) {
-  const { clerkEnabled } = useAppAuth();
+  const { clerkEnabled, isSignedIn } = useAppAuth();
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -33,18 +50,19 @@ export function Navigation({ activeSection }: Props) {
           {item.label}
         </button>
       ))}
-      {clerkEnabled && (
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button className="nav-btn" style={{ whiteSpace: 'nowrap' }}>Sign In</button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-        </div>
-      )}
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', padding: '0 4px' }}>
+        {isSignedIn ? (
+          <UserButton />
+        ) : clerkEnabled ? (
+          <SignInButton mode="modal">
+            <button style={signInBtnStyle}>Sign In</button>
+          </SignInButton>
+        ) : (
+          <button style={{ ...signInBtnStyle, opacity: 0.45, cursor: 'default' }} disabled title="Authentication not configured">
+            Sign In
+          </button>
+        )}
+      </div>
     </nav>
   );
 }
