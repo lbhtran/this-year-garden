@@ -51,6 +51,20 @@ scripts/      # Utility scripts (e.g., migrate.ts, test-db.ts)
 - Keep bundle size in mind; avoid heavy client-side dependencies
 - Prefer Server Components and server-side data fetching where possible
 
+## Git Management
+
+- Use **[gitmoji](https://gitmoji.dev/)** for commit messages — prefix every commit with the relevant emoji, e.g.:
+  - `✨ Add new plant tracking feature`
+  - `🐛 Fix container journey display bug`
+  - `♻️ Refactor database query helpers`
+  - `📝 Update README`
+  - `🔧 Update configuration`
+- Maintain a **`CHANGELOG.md`** at the root of the project and update it with every release
+- Follow **[Semantic Versioning](https://semver.org/)** (semver) for releases:
+  - `MAJOR` — breaking changes
+  - `MINOR` — new backwards-compatible features
+  - `PATCH` — backwards-compatible bug fixes
+
 ## Key Scripts
 
 ```bash
