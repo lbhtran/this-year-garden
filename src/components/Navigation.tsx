@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { SignInButton, UserButton } from '@clerk/nextjs';
 import { useAppAuth } from '../contexts/AuthContext';
