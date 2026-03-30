@@ -51,6 +51,25 @@ scripts/      # Utility scripts (e.g., migrate.ts, test-db.ts)
 - Keep bundle size in mind; avoid heavy client-side dependencies
 - Prefer Server Components and server-side data fetching where possible
 
+## Testing
+
+- **Every code change must be accompanied by tests** — no exceptions.
+- Tests for database logic live in `scripts/test-db.ts` and are run with `npm run test:db`.
+- **When adding or modifying a DB table or API route**, you must:
+  1. Add or update the relevant tests in `scripts/test-db.ts`
+  2. Run `npm run test:db` to verify all tests pass before committing
+  3. Ensure the CI workflow also passes (`npm run test:db` runs automatically on every PR)
+- Follow the existing test style in `scripts/test-db.ts`:
+  - Use `client.query(...)` for direct DB assertions
+  - Use the `assert(condition, message)` helper for all assertions
+  - Clean up test data at the start and end of each test block
+  - Log each passing check with `console.log('  PASS  <description>')`
+- **When adding a new DB table**, cover at minimum:
+  - Ownership isolation (userA cannot see userB's rows)
+  - Scoped delete (deleting userA's row does not affect userB)
+  - Cascade delete behaviour (if applicable)
+- **When adding a new API route**, manually verify with `curl` or equivalent before committing (see `README-mcp.md` for examples).
+
 ## Git Management
 
 - Use **[gitmoji](https://gitmoji.dev/)** for commit messages — prefix every commit with the relevant emoji, e.g.:
@@ -73,5 +92,5 @@ npm run build     # Production build
 npm run start     # Start production server
 npm run lint      # Lint the codebase
 npm run migrate   # Run database migrations
-npm run test:db   # Test database connection
+npm run test:db   # Run database integration tests (must pass before committing)
 ```
