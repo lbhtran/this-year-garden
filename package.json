@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "tsx scripts/migrate.ts",
+    "seed:containers": "tsx scripts/seed-containers.ts",
     "test:db": "tsx scripts/test-db.ts"
   },
   "dependencies": {
