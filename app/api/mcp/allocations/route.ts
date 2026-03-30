@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../_mcp-auth';
+import { isMcpAuthenticated, getMcpUserId, corsHeaders, handleOptions } from '../../_mcp-auth';
 import { ensureMcpTables } from '../_ensure-tables';
 
 export function OPTIONS() {
@@ -14,7 +14,8 @@ export async function GET(request: Request) {
   try {
     await ensureMcpTables();
     const sql = neon(process.env.POSTGRES_URL!);
-    const rows = await sql`SELECT * FROM plant_allocations ORDER BY container_id, sort_order`;
+    const userId = getMcpUserId();
+    const rows = await sql`SELECT * FROM plant_allocations WHERE user_id = ${userId} ORDER BY container_id, sort_order`;
     return NextResponse.json(rows, { headers: corsHeaders });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -38,9 +39,10 @@ export async function POST(request: Request) {
       sort_order?: number;
     };
     const { id, plant_id, container_id, zone, status, sort_order } = body;
+    const userId = getMcpUserId();
     const rows = await sql`
       INSERT INTO plant_allocations (user_id, id, plant_id, container_id, zone, status, sort_order, updated_at)
-      VALUES ('mcp', ${id}, ${plant_id}, ${container_id}, ${zone ?? null}, ${status ?? 'current'}, ${sort_order ?? 0}, NOW())
+      VALUES (${userId}, ${id}, ${plant_id}, ${container_id}, ${zone ?? null}, ${status ?? 'current'}, ${sort_order ?? 0}, NOW())
       ON CONFLICT (user_id, id) DO UPDATE SET
         plant_id     = EXCLUDED.plant_id,
         container_id = EXCLUDED.container_id,
