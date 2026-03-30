@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../../_mcp-auth';
+import { ensureMcpTables } from '../../_ensure-tables';
 
 export function OPTIONS() {
   return handleOptions();
@@ -14,6 +15,7 @@ export async function PUT(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   try {
+    await ensureMcpTables();
     const { id } = await params;
     const sql = neon(process.env.POSTGRES_URL!);
     const fields = (await request.json()) as Partial<{
@@ -50,6 +52,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   try {
+    await ensureMcpTables();
     const { id } = await params;
     const sql = neon(process.env.POSTGRES_URL!);
     await sql`DELETE FROM plant_allocations WHERE id = ${id}`;

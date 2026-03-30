@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../_mcp-auth';
+import { ensureMcpTables } from '../_ensure-tables';
 
 export function OPTIONS() {
   return handleOptions();
-}
-
-function isUndefinedTable(err: unknown): boolean {
-  return (
-    err instanceof Error &&
-    (err.message.includes('does not exist') || (err as { code?: string }).code === '42P01')
-  );
 }
 
 export async function GET(request: Request) {
@@ -18,13 +12,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   try {
+    await ensureMcpTables();
     const sql = neon(process.env.POSTGRES_URL!);
     const rows = await sql`SELECT * FROM plant_allocations ORDER BY container_id, sort_order`;
     return NextResponse.json(rows, { headers: corsHeaders });
   } catch (err) {
-    if (isUndefinedTable(err)) {
-      return NextResponse.json([], { headers: corsHeaders });
-    }
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500, headers: corsHeaders });
   }
@@ -35,6 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   try {
+    await ensureMcpTables();
     const sql = neon(process.env.POSTGRES_URL!);
     const body = (await request.json()) as {
       id: string;
