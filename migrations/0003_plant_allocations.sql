@@ -1,4 +1,7 @@
 -- Migration 0003: plant_allocations table
+-- Note: no FK constraints — MCP-managed rows use user_id='mcp' while web-app
+-- plants/containers may carry a Clerk user_id, so cross-user references are
+-- intentional and FK enforcement would block valid inserts.
 
 CREATE TABLE IF NOT EXISTS plant_allocations (
   user_id      TEXT        NOT NULL,
@@ -10,7 +13,5 @@ CREATE TABLE IF NOT EXISTS plant_allocations (
   sort_order   INTEGER     NOT NULL DEFAULT 0,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (user_id, id),
-  FOREIGN KEY (user_id, plant_id)     REFERENCES plants(user_id, id)     ON DELETE CASCADE,
-  FOREIGN KEY (user_id, container_id) REFERENCES containers(user_id, id) ON DELETE CASCADE
+  PRIMARY KEY (user_id, id)
 );
