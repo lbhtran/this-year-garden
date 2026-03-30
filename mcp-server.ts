@@ -141,6 +141,124 @@ server.tool(
   },
 );
 
+// ── Containers ────────────────────────────────────────────────────────────────
+
+server.tool('list_containers', 'List all containers with their plant allocations', {}, async () => {
+  const data = await apiFetch('/api/mcp/containers');
+  return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+});
+
+server.tool(
+  'create_container',
+  'Add or upsert a container in the garden',
+  {
+    id: z.string().describe('Unique container identifier'),
+    name: z.string().describe('Container name'),
+    type: z.string().describe("Container type: 'pot' | 'planter' | 'raised_bed' | 'grow_bag' | 'trellis_planter'"),
+    emoji: z.string().optional().describe('Emoji representing the container'),
+    size: z.string().optional().describe('Container size description'),
+    notes: z.string().optional().describe('General notes about the container'),
+    on_hold: z.boolean().optional().describe('Whether the container is on hold'),
+    diagram_id: z.string().optional().describe('ID used for frontend diagram linking'),
+  },
+  async (params) => {
+    const data = await apiFetch('/api/mcp/containers', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  },
+);
+
+server.tool(
+  'update_container',
+  'Update an existing container by id',
+  {
+    id: z.string().describe('Container id to update'),
+    name: z.string().optional().describe('Container name'),
+    type: z.string().optional().describe('Container type'),
+    emoji: z.string().optional().describe('Emoji representing the container'),
+    size: z.string().optional().describe('Container size description'),
+    notes: z.string().optional().describe('General notes about the container'),
+    on_hold: z.boolean().optional().describe('Whether the container is on hold'),
+    diagram_id: z.string().optional().describe('ID used for frontend diagram linking'),
+  },
+  async ({ id, ...fields }) => {
+    const data = await apiFetch(`/api/mcp/containers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(fields),
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  },
+);
+
+server.tool(
+  'delete_container',
+  'Delete a container by id',
+  { id: z.string().describe('Container id to delete') },
+  async ({ id }) => {
+    await apiFetch(`/api/mcp/containers/${id}`, { method: 'DELETE' });
+    return { content: [{ type: 'text', text: `Container ${id} deleted.` }] };
+  },
+);
+
+// ── Allocations ───────────────────────────────────────────────────────────────
+
+server.tool('list_allocations', 'List all plant-to-container allocations', {}, async () => {
+  const data = await apiFetch('/api/mcp/allocations');
+  return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+});
+
+server.tool(
+  'create_allocation',
+  'Add or upsert a plant-to-container allocation',
+  {
+    id: z.string().describe('Unique allocation identifier'),
+    plant_id: z.string().describe('ID of the plant being allocated'),
+    container_id: z.string().describe('ID of the container receiving the plant'),
+    zone: z.string().optional().describe("Zone within the container (e.g. 'Side A', 'centre')"),
+    status: z.string().optional().describe("Allocation status: 'past' | 'current' | 'future' (default: 'current')"),
+    sort_order: z.number().optional().describe('Ordering within a container journey (default: 0)'),
+  },
+  async (params) => {
+    const data = await apiFetch('/api/mcp/allocations', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  },
+);
+
+server.tool(
+  'update_allocation',
+  'Update an existing plant-to-container allocation by id',
+  {
+    id: z.string().describe('Allocation id to update'),
+    plant_id: z.string().optional().describe('ID of the plant'),
+    container_id: z.string().optional().describe('ID of the container'),
+    zone: z.string().optional().describe('Zone within the container'),
+    status: z.string().optional().describe("Allocation status: 'past' | 'current' | 'future'"),
+    sort_order: z.number().optional().describe('Ordering within a container journey'),
+  },
+  async ({ id, ...fields }) => {
+    const data = await apiFetch(`/api/mcp/allocations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(fields),
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  },
+);
+
+server.tool(
+  'delete_allocation',
+  'Delete a plant-to-container allocation by id',
+  { id: z.string().describe('Allocation id to delete') },
+  async ({ id }) => {
+    await apiFetch(`/api/mcp/allocations/${id}`, { method: 'DELETE' });
+    return { content: [{ type: 'text', text: `Allocation ${id} deleted.` }] };
+  },
+);
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 const transport = new StdioServerTransport();
