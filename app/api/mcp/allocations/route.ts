@@ -6,6 +6,13 @@ export function OPTIONS() {
   return handleOptions();
 }
 
+function isUndefinedTable(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err.message.includes('does not exist') || (err as { code?: string }).code === '42P01')
+  );
+}
+
 export async function GET(request: Request) {
   if (!isMcpAuthenticated(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
@@ -15,6 +22,9 @@ export async function GET(request: Request) {
     const rows = await sql`SELECT * FROM plant_allocations ORDER BY container_id, sort_order`;
     return NextResponse.json(rows, { headers: corsHeaders });
   } catch (err) {
+    if (isUndefinedTable(err)) {
+      return NextResponse.json([], { headers: corsHeaders });
+    }
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500, headers: corsHeaders });
   }

@@ -6,19 +6,31 @@ export function OPTIONS() {
   return handleOptions();
 }
 
+function isUndefinedTable(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err.message.includes('does not exist') || (err as { code?: string }).code === '42P01')
+  );
+}
+
 export async function GET(request: Request) {
   if (!isMcpAuthenticated(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   try {
     const sql = neon(process.env.POSTGRES_URL!);
-    const [containers, allocations] = await Promise.all([
-      sql`SELECT * FROM containers ORDER BY id`,
-      sql`SELECT * FROM plant_allocations ORDER BY container_id, sort_order`,
-    ]);
+    const containers = await sql`SELECT * FROM containers ORDER BY id`;
+
+    let allocations: unknown[] = [];
+    try {
+      allocations = await sql`SELECT * FROM plant_allocations ORDER BY container_id, sort_order`;
+    } catch (allocErr) {
+      if (!isUndefinedTable(allocErr)) throw allocErr;
+      // plant_allocations table not yet created — return containers with empty allocations
+    }
 
     const allocationsByContainer: Record<string, unknown[]> = {};
-    for (const alloc of allocations) {
+    for (const alloc of allocations as Record<string, unknown>[]) {
       const key = alloc.container_id as string;
       if (!allocationsByContainer[key]) allocationsByContainer[key] = [];
       allocationsByContainer[key].push(alloc);
