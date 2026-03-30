@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../_mcp-auth';
+import { isMcpAuthenticated, getMcpUserId, corsHeaders, handleOptions } from '../../_mcp-auth';
 import { ensureMcpTables } from '../_ensure-tables';
 
 export function OPTIONS() {
@@ -14,9 +14,10 @@ export async function GET(request: Request) {
   try {
     await ensureMcpTables();
     const sql = neon(process.env.POSTGRES_URL!);
+    const userId = getMcpUserId();
     const [containers, allocations] = await Promise.all([
-      sql`SELECT * FROM containers ORDER BY id`,
-      sql`SELECT * FROM plant_allocations ORDER BY container_id, sort_order`,
+      sql`SELECT * FROM containers WHERE user_id = ${userId} ORDER BY id`,
+      sql`SELECT * FROM plant_allocations WHERE user_id = ${userId} ORDER BY container_id, sort_order`,
     ]);
 
     const allocationsByContainer: Record<string, unknown[]> = {};
@@ -56,9 +57,10 @@ export async function POST(request: Request) {
       diagram_id?: string;
     };
     const { id, name, emoji, type, size, notes, on_hold, diagram_id } = body;
+    const userId = getMcpUserId();
     const rows = await sql`
       INSERT INTO containers (user_id, id, name, emoji, type, size, notes, on_hold, diagram_id, updated_at)
-      VALUES ('mcp', ${id}, ${name}, ${emoji ?? null}, ${type}, ${size ?? null}, ${notes ?? null}, ${on_hold ?? false}, ${diagram_id ?? null}, NOW())
+      VALUES (${userId}, ${id}, ${name}, ${emoji ?? null}, ${type}, ${size ?? null}, ${notes ?? null}, ${on_hold ?? false}, ${diagram_id ?? null}, NOW())
       ON CONFLICT (user_id, id) DO UPDATE SET
         name       = EXCLUDED.name,
         emoji      = EXCLUDED.emoji,

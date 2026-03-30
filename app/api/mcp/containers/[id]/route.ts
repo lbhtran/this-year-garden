@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../../_mcp-auth';
+import { isMcpAuthenticated, getMcpUserId, corsHeaders, handleOptions } from '../../../_mcp-auth';
 import { ensureMcpTables } from '../../_ensure-tables';
 
 export function OPTIONS() {
@@ -18,6 +18,7 @@ export async function PUT(
     await ensureMcpTables();
     const { id } = await params;
     const sql = neon(process.env.POSTGRES_URL!);
+    const userId = getMcpUserId();
     const fields = (await request.json()) as Partial<{
       name: string;
       emoji: string;
@@ -37,7 +38,7 @@ export async function PUT(
         on_hold    = COALESCE(${fields.on_hold !== undefined ? fields.on_hold : null}, on_hold),
         diagram_id = COALESCE(${fields.diagram_id !== undefined ? fields.diagram_id : null}, diagram_id),
         updated_at = NOW()
-      WHERE id = ${id}
+      WHERE user_id = ${userId} AND id = ${id}
       RETURNING *
     `;
     if (rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404, headers: corsHeaders });
@@ -59,7 +60,8 @@ export async function DELETE(
     await ensureMcpTables();
     const { id } = await params;
     const sql = neon(process.env.POSTGRES_URL!);
-    await sql`DELETE FROM containers WHERE id = ${id}`;
+    const userId = getMcpUserId();
+    await sql`DELETE FROM containers WHERE user_id = ${userId} AND id = ${id}`;
     return new NextResponse(null, { status: 204, headers: corsHeaders });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

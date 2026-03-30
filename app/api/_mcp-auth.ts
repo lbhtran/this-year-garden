@@ -18,3 +18,13 @@ export const corsHeaders = {
 export function handleOptions() {
   return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
+
+/**
+ * Returns the Clerk user ID that MCP requests should operate as.
+ * Set MCP_OWNER_USER_ID to your Clerk userId (e.g. "user_abc123") so that
+ * MCP writes land on the same rows as the web app.
+ * Falls back to 'mcp' if not configured (preserves existing behaviour).
+ */
+export function getMcpUserId(): string {
+  return process.env.MCP_OWNER_USER_ID ?? 'mcp';
+}
