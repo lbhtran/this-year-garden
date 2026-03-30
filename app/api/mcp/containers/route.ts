@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../_mcp-auth';
+import { ensureMcpTables } from '../_ensure-tables';
 
 export function OPTIONS() {
   return handleOptions();
-}
-
-function isUndefinedTable(err: unknown): boolean {
-  return (
-    err instanceof Error &&
-    (err.message.includes('does not exist') || (err as { code?: string }).code === '42P01')
-  );
 }
 
 export async function GET(request: Request) {
@@ -18,16 +12,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   try {
+    await ensureMcpTables();
     const sql = neon(process.env.POSTGRES_URL!);
-    const containers = await sql`SELECT * FROM containers ORDER BY id`;
-
-    let allocations: unknown[] = [];
-    try {
-      allocations = await sql`SELECT * FROM plant_allocations ORDER BY container_id, sort_order`;
-    } catch (allocErr) {
-      if (!isUndefinedTable(allocErr)) throw allocErr;
-      // plant_allocations table not yet created — return containers with empty allocations
-    }
+    const [containers, allocations] = await Promise.all([
+      sql`SELECT * FROM containers ORDER BY id`,
+      sql`SELECT * FROM plant_allocations ORDER BY container_id, sort_order`,
+    ]);
 
     const allocationsByContainer: Record<string, unknown[]> = {};
     for (const alloc of allocations as Record<string, unknown>[]) {
@@ -53,6 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   try {
+    await ensureMcpTables();
     const sql = neon(process.env.POSTGRES_URL!);
     const body = (await request.json()) as {
       id: string;
