@@ -11,6 +11,7 @@ jobs:
       contents: read
     env:
       POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+      MCP_OWNER_USER_ID: ${{ secrets.MCP_OWNER_USER_ID }}
 
     steps:
       - uses: actions/checkout@v4
