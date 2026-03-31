@@ -8,7 +8,7 @@ if (!connectionString) {
   process.exit(1);
 }
 
-const SEED_USER_ID = 'mcp';
+const SEED_USER_ID = process.env.MCP_OWNER_USER_ID ?? 'mcp';
 
 const containers = [
   { id: 'c1',  emoji: '🌿', name: 'Corner Trellis Planter', type: 'trellis_planter', size: 'Right-angle triangle — 70 × 70 cm trellis sides', notes: 'Cherry tomatoes (Side A, vertical) + Beef tomatoes (Side B, horizontal). Marigolds & nasturtiums along the long (diagonal) side.', on_hold: false, diagram_id: 'diagram-c1' },
