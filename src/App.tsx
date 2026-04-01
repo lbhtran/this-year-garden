@@ -14,12 +14,13 @@ import { TimelineSection } from './components/TimelineSection';
 import { usePlants } from './hooks/usePlants';
 import { useShopping } from './hooks/useShopping';
 import { useWeather } from './hooks/useWeather';
-import { initialContainers } from './data/containers';
+import { useContainers } from './hooks/useContainers';
 
 function App() {
   const { isSignedIn } = useAppAuth();
   const { plants, updatePlant, addPlant, deletePlant } = usePlants();
   const { items: shoppingItems, toggleItem } = useShopping();
+  const { containers } = useContainers();
   const [activeSection, setActiveSection] = useState('overview');
   const weather = useWeather();
 
@@ -49,7 +50,7 @@ function App() {
           <WeatherWidget plants={plants} weather={weather} />
         </div>
 
-        <OverviewSection containers={initialContainers} />
+        <OverviewSection containers={containers} />
         <DiagramsSection />
         <SeedsSection
           plants={plants}
