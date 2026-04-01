@@ -10,7 +10,7 @@ export function OverviewSection({ containers }: Props) {
 
   const filtered = containers.filter(c =>
     c.name.toLowerCase().includes(filter.toLowerCase()) ||
-    c.use.toLowerCase().includes(filter.toLowerCase())
+    c.notes.toLowerCase().includes(filter.toLowerCase())
   );
 
   return (
@@ -44,7 +44,7 @@ export function OverviewSection({ containers }: Props) {
           >
             <div className="container-name">{c.emoji} {c.name}</div>
             <div className="container-size">{c.size}</div>
-            <div className="container-use">{c.use}</div>
+            <div className="container-use">{c.notes}</div>
             {c.onHold && <span className="on-hold-badge">Deferred</span>}
             {c.diagramId && (
               <div className="container-diagram-link">
