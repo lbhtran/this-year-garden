@@ -45,28 +45,35 @@ export function useContainers() {
     setContainers(prev => [...prev, container]);
     try {
       const headers = await authHeaders();
-      await fetch('/api/containers', {
+      const res = await fetch('/api/containers', {
         method: 'POST',
         headers,
         body: JSON.stringify({
           id: container.id,
           name: container.name,
           emoji: container.emoji,
-          type: container.type,
+          type: container.type ?? 'planter',
           size: container.size,
           notes: container.notes,
           on_hold: container.onHold ?? false,
           diagram_id: container.diagramId,
         }),
       });
-    } catch {/* optimistic */}
+      if (!res.ok) {
+        console.error('Failed to add container:', await res.text());
+        setContainers(prev => prev.filter(c => c.id !== container.id));
+      }
+    } catch (err) {
+      console.error('Failed to add container:', err);
+      setContainers(prev => prev.filter(c => c.id !== container.id));
+    }
   }, [authHeaders]);
 
   const updateContainer = useCallback(async (container: Container) => {
     setContainers(prev => prev.map(c => c.id === container.id ? container : c));
     try {
       const headers = await authHeaders();
-      await fetch(`/api/containers/${container.id}`, {
+      const res = await fetch(`/api/containers/${container.id}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({
@@ -79,16 +86,29 @@ export function useContainers() {
           diagram_id: container.diagramId,
         }),
       });
-    } catch {/* optimistic update stays */}
+      if (!res.ok) {
+        console.error('Failed to update container:', await res.text());
+      }
+    } catch (err) {
+      console.error('Failed to update container:', err);
+    }
   }, [authHeaders]);
 
   const deleteContainer = useCallback(async (id: string) => {
+    const previous = containers.find(c => c.id === id);
     setContainers(prev => prev.filter(c => c.id !== id));
     try {
       const headers = await authHeaders();
-      await fetch(`/api/containers/${id}`, { method: 'DELETE', headers });
-    } catch {/* optimistic */}
-  }, [authHeaders]);
+      const res = await fetch(`/api/containers/${id}`, { method: 'DELETE', headers });
+      if (!res.ok) {
+        console.error('Failed to delete container:', await res.text());
+        if (previous) setContainers(prev => [...prev, previous]);
+      }
+    } catch (err) {
+      console.error('Failed to delete container:', err);
+      if (previous) setContainers(prev => [...prev, previous]);
+    }
+  }, [authHeaders, containers]);
 
   return { containers, loading, addContainer, updateContainer, deleteContainer };
 }

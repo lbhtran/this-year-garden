@@ -25,7 +25,7 @@ export async function PATCH(
     UPDATE containers SET
       name       = ${fields.name       ?? null},
       emoji      = ${fields.emoji      ?? null},
-      type       = ${fields.type       ?? null},
+      type       = COALESCE(${fields.type ?? null}, type),
       size       = ${fields.size       ?? null},
       notes      = ${fields.notes      ?? null},
       on_hold    = ${fields.on_hold    ?? false},
