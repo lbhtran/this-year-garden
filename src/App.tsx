@@ -20,7 +20,7 @@ function App() {
   const { isSignedIn } = useAppAuth();
   const { plants, updatePlant, addPlant, deletePlant } = usePlants();
   const { items: shoppingItems, toggleItem } = useShopping();
-  const { containers } = useContainers();
+  const { containers, addContainer, updateContainer, deleteContainer } = useContainers();
   const [activeSection, setActiveSection] = useState('overview');
   const weather = useWeather();
 
@@ -50,7 +50,12 @@ function App() {
           <WeatherWidget plants={plants} weather={weather} />
         </div>
 
-        <OverviewSection containers={containers} />
+        <OverviewSection
+            containers={containers}
+            onAddContainer={addContainer}
+            onUpdateContainer={updateContainer}
+            onDeleteContainer={deleteContainer}
+          />
         <DiagramsSection />
         <SeedsSection
           plants={plants}
