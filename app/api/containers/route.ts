@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const { id, name, emoji, type, size, notes, on_hold, diagram_id } = body;
   const rows = await sql`
     INSERT INTO containers (user_id, id, name, emoji, type, size, notes, on_hold, diagram_id, updated_at)
-    VALUES (${userId}, ${id}, ${name}, ${emoji ?? null}, ${type ?? null}, ${size ?? null}, ${notes ?? null}, ${on_hold ?? false}, ${diagram_id ?? null}, NOW())
+    VALUES (${userId}, ${id}, ${name}, ${emoji ?? null}, ${type ?? 'planter'}, ${size ?? null}, ${notes ?? null}, ${on_hold ?? false}, ${diagram_id ?? null}, NOW())
     ON CONFLICT (user_id, id) DO UPDATE SET
       name       = EXCLUDED.name,
       emoji      = EXCLUDED.emoji,
