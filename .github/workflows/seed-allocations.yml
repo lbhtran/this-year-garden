@@ -1,0 +1,29 @@
+name: Seed allocations
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed-allocations:
+    name: Seed plant allocations data
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+      MCP_OWNER_USER_ID: ${{ secrets.MCP_OWNER_USER_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Seed allocations
+        if: env.POSTGRES_URL != ''
+        run: npm run seed:allocations
