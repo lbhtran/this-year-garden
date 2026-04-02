@@ -377,6 +377,84 @@ async function main(): Promise<void> {
     // Clean up allocation test data.
     await client.query('DELETE FROM plant_allocations WHERE user_id = ANY($1)', [[userA, userB]]);
 
+    // ── seed-allocations idempotency ─────────────────────────────────────────
+    // Simulate a subset of the seed-allocations data to verify the ON CONFLICT
+    // DO UPDATE (upsert) logic works correctly for the seeded allocation IDs.
+    console.log('\nTesting seed-allocations idempotency...');
+
+    const seedUser = 'test-seed-alloc';
+    await client.query('DELETE FROM plant_allocations WHERE user_id = $1', [seedUser]);
+
+    const seedRows = [
+      { id: 'alloc-1-c1',  plant_id: '1',  container_id: 'c1',  zone: 'Side A',     status: 'current', sort_order: 0 },
+      { id: 'alloc-2-c1',  plant_id: '2',  container_id: 'c1',  zone: 'Side B',     status: 'current', sort_order: 0 },
+      { id: 'alloc-w7-c4', plant_id: 'w7', container_id: 'c4',  zone: 'centre',     status: 'future',  sort_order: 0 },
+      { id: 'alloc-10-c5', plant_id: '10', container_id: 'c5',  zone: 'inner ring', status: 'current', sort_order: 0 },
+    ];
+
+    // First pass — insert.
+    for (const r of seedRows) {
+      await client.query(
+        `INSERT INTO plant_allocations (user_id, id, plant_id, container_id, zone, status, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (user_id, id) DO UPDATE SET
+           plant_id     = EXCLUDED.plant_id,
+           container_id = EXCLUDED.container_id,
+           zone         = EXCLUDED.zone,
+           status       = EXCLUDED.status,
+           sort_order   = EXCLUDED.sort_order,
+           updated_at   = NOW()`,
+        [seedUser, r.id, r.plant_id, r.container_id, r.zone, r.status, r.sort_order],
+      );
+    }
+
+    const { rows: afterFirst } = await client.query(
+      'SELECT id FROM plant_allocations WHERE user_id = $1 ORDER BY id',
+      [seedUser],
+    );
+    assert(afterFirst.length === seedRows.length, `Expected ${seedRows.length} rows after first pass, got ${afterFirst.length}`);
+    console.log('  PASS  first seed pass inserts all rows');
+
+    // Second pass — upsert (idempotent).
+    for (const r of seedRows) {
+      await client.query(
+        `INSERT INTO plant_allocations (user_id, id, plant_id, container_id, zone, status, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (user_id, id) DO UPDATE SET
+           plant_id     = EXCLUDED.plant_id,
+           container_id = EXCLUDED.container_id,
+           zone         = EXCLUDED.zone,
+           status       = EXCLUDED.status,
+           sort_order   = EXCLUDED.sort_order,
+           updated_at   = NOW()`,
+        [seedUser, r.id, r.plant_id, r.container_id, r.zone, r.status, r.sort_order],
+      );
+    }
+
+    const { rows: afterSecond } = await client.query(
+      'SELECT id FROM plant_allocations WHERE user_id = $1 ORDER BY id',
+      [seedUser],
+    );
+    assert(afterSecond.length === seedRows.length, `Expected ${seedRows.length} rows after second pass (upsert), got ${afterSecond.length}`);
+    console.log('  PASS  second seed pass is idempotent (no duplicate rows)');
+
+    // Spot-check zone values.
+    const { rows: zoneCheck } = await client.query(
+      `SELECT id, zone, container_id FROM plant_allocations
+       WHERE user_id = $1 AND id = ANY($2)
+       ORDER BY id`,
+      [seedUser, ['alloc-1-c1', 'alloc-2-c1', 'alloc-w7-c4', 'alloc-10-c5']],
+    );
+    const zoneMap = Object.fromEntries(zoneCheck.map(r => [r.id, r.zone]));
+    assert(zoneMap['alloc-1-c1']  === 'Side A',     `alloc-1-c1 zone should be 'Side A', got '${zoneMap['alloc-1-c1']}'`);
+    assert(zoneMap['alloc-2-c1']  === 'Side B',     `alloc-2-c1 zone should be 'Side B', got '${zoneMap['alloc-2-c1']}'`);
+    assert(zoneMap['alloc-w7-c4'] === 'centre',     `alloc-w7-c4 zone should be 'centre', got '${zoneMap['alloc-w7-c4']}'`);
+    assert(zoneMap['alloc-10-c5'] === 'inner ring', `alloc-10-c5 zone should be 'inner ring', got '${zoneMap['alloc-10-c5']}'`);
+    console.log('  PASS  spot-check zone values match expected diagram zone names');
+
+    // Clean up seed idempotency test data.
+    await client.query('DELETE FROM plant_allocations WHERE user_id = $1', [seedUser]);
+
     console.log('\nAll tests passed!');
   } finally {
     await client.end();
