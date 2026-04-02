@@ -9,6 +9,7 @@
     "lint": "next lint",
     "migrate": "tsx scripts/migrate.ts",
     "seed:containers": "tsx scripts/seed-containers.ts",
+    "seed:allocations": "tsx scripts/seed-allocations.ts",
     "test:db": "tsx scripts/test-db.ts"
   },
   "dependencies": {
