@@ -287,6 +287,96 @@ async function main(): Promise<void> {
     // Clean up CRUD test data.
     await client.query('DELETE FROM containers WHERE user_id = ANY($1)', [[userA, userB]]);
 
+    // ── plant_allocations tests ─────────────────────────────────────────────
+    console.log('\nTesting plant_allocations table...');
+
+    // Clean up any leftover allocation test data.
+    await client.query('DELETE FROM plant_allocations WHERE user_id = ANY($1)', [[userA, userB]]);
+
+    // Insert allocations for userA and userB.
+    await client.query(
+      `INSERT INTO plant_allocations (user_id, id, plant_id, container_id, zone, status, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userA, 'alloc-a-1', 'plant-a-1', 'c1', 'Side A', 'current', 0],
+    );
+    await client.query(
+      `INSERT INTO plant_allocations (user_id, id, plant_id, container_id, zone, status, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userB, 'alloc-b-1', 'plant-b-1', 'c1', 'Side B', 'future', 1],
+    );
+
+    // Ownership isolation: userA sees only their allocations.
+    const { rows: allocsA } = await client.query(
+      'SELECT * FROM plant_allocations WHERE user_id = $1',
+      [userA],
+    );
+    assert(allocsA.length === 1, `userA should have 1 allocation, got ${allocsA.length}`);
+    assert(allocsA[0].zone === 'Side A', `userA allocation zone should be 'Side A', got '${allocsA[0].zone}'`);
+    console.log('  PASS  userA allocations are isolated');
+
+    // Ownership isolation: userB sees only their allocations.
+    const { rows: allocsB } = await client.query(
+      'SELECT * FROM plant_allocations WHERE user_id = $1',
+      [userB],
+    );
+    assert(allocsB.length === 1, `userB should have 1 allocation, got ${allocsB.length}`);
+    assert(allocsB[0].zone === 'Side B', `userB allocation zone should be 'Side B', got '${allocsB[0].zone}'`);
+    console.log('  PASS  userB allocations are isolated');
+
+    // Scoped delete: deleting userA allocation does not affect userB.
+    await client.query(
+      'DELETE FROM plant_allocations WHERE user_id = $1 AND id = $2',
+      [userA, 'alloc-a-1'],
+    );
+    const { rows: allocsAAfterDelete } = await client.query(
+      'SELECT * FROM plant_allocations WHERE user_id = $1',
+      [userA],
+    );
+    assert(allocsAAfterDelete.length === 0, 'userA allocation should be deleted');
+    const { rows: allocsBAfterDelete } = await client.query(
+      'SELECT * FROM plant_allocations WHERE user_id = $1',
+      [userB],
+    );
+    assert(allocsBAfterDelete.length === 1, `userB should still have 1 allocation after userA delete, got ${allocsBAfterDelete.length}`);
+    console.log('  PASS  scoped delete leaves userB allocations intact');
+
+    // Upsert (ON CONFLICT): insert or update allocation by (user_id, id).
+    await client.query(
+      `INSERT INTO plant_allocations (user_id, id, plant_id, container_id, zone, status, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (user_id, id) DO UPDATE SET
+         plant_id     = EXCLUDED.plant_id,
+         container_id = EXCLUDED.container_id,
+         zone         = EXCLUDED.zone,
+         status       = EXCLUDED.status,
+         sort_order   = EXCLUDED.sort_order,
+         updated_at   = NOW()`,
+      [userB, 'alloc-b-1', 'plant-b-1', 'c2', 'inner ring', 'current', 0],
+    );
+    const { rows: upsertRows } = await client.query(
+      'SELECT * FROM plant_allocations WHERE user_id = $1 AND id = $2',
+      [userB, 'alloc-b-1'],
+    );
+    assert(upsertRows[0].container_id === 'c2', `container_id should be updated to 'c2', got '${upsertRows[0].container_id}'`);
+    assert(upsertRows[0].zone === 'inner ring', `zone should be 'inner ring', got '${upsertRows[0].zone}'`);
+    console.log('  PASS  upsert updates existing allocation correctly');
+
+    // Null zone is stored as NULL (not empty string).
+    await client.query(
+      `INSERT INTO plant_allocations (user_id, id, plant_id, container_id, zone, status, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userA, 'alloc-a-2', 'plant-a-2', 'c3', null, 'current', 0],
+    );
+    const { rows: nullZoneRows } = await client.query(
+      'SELECT zone FROM plant_allocations WHERE user_id = $1 AND id = $2',
+      [userA, 'alloc-a-2'],
+    );
+    assert(nullZoneRows[0].zone === null, `zone should be NULL, got '${nullZoneRows[0].zone}'`);
+    console.log('  PASS  null zone is stored correctly');
+
+    // Clean up allocation test data.
+    await client.query('DELETE FROM plant_allocations WHERE user_id = ANY($1)', [[userA, userB]]);
+
     console.log('\nAll tests passed!');
   } finally {
     await client.end();

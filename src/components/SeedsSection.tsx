@@ -7,11 +7,13 @@ import { PlantModal } from './PlantModal';
 import { PlantDetailModal } from './PlantDetailModal';
 import type { WeatherData } from '../hooks/useWeather';
 import { useAppAuth } from '../contexts/AuthContext';
+import type { Container } from '../data/containers';
 
 type Tab = 'all' | 'growing' | 'wishlist';
 
 interface Props {
   plants: Plant[];
+  containers: Container[];
   onUpdatePlant: (plant: Plant) => void;
   onAddPlant: (plant: Plant) => void;
   onDeletePlant: (id: string) => void;
@@ -30,7 +32,7 @@ const stageOrder: PlantStage[] = [
 const growingStages = new Set<PlantStage>(['sown', 'sprouted', 'chitting', 'hardening-off', 'planted', 'flowering', 'fruiting', 'harvesting', 'dormant']);
 const wishlistStages = new Set<PlantStage>(['wishlist', 'sourced']);
 
-export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant, currentWeather, isSignedIn }: Props) {
+export function SeedsSection({ plants, containers, onUpdatePlant, onAddPlant, onDeletePlant, currentWeather, isSignedIn }: Props) {
   const { clerkEnabled } = useAppAuth();
   const [activeTab, setActiveTab] = useState<Tab>('growing');
   const [filter, setFilter] = useState('');
@@ -218,6 +220,7 @@ export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant,
       {viewingPlant && (
         <PlantDetailModal
           plant={viewingPlant}
+          containers={containers}
           onClose={() => setViewingPlant(null)}
           onEdit={p => { setViewingPlant(null); setEditingPlant(p); }}
         />
@@ -225,12 +228,14 @@ export function SeedsSection({ plants, onUpdatePlant, onAddPlant, onDeletePlant,
       {editingPlant && (
         <PlantModal
           plant={editingPlant}
+          containers={containers}
           onSave={p => { onUpdatePlant(p); setEditingPlant(null); }}
           onClose={() => setEditingPlant(null)}
         />
       )}
       {showAddModal && (
         <PlantModal
+          containers={containers}
           onSave={p => { onAddPlant(p); setShowAddModal(false); }}
           onClose={() => setShowAddModal(false)}
         />
