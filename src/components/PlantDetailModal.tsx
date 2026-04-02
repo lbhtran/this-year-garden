@@ -4,9 +4,11 @@ import { SignInButton } from '@clerk/nextjs';
 import type { Plant, ContainerStop } from '../data/plants';
 import { stageLabels, stageColors } from '../data/plants';
 import { useAppAuth } from '../contexts/AuthContext';
+import type { Container } from '../data/containers';
 
 interface Props {
   plant: Plant;
+  containers: Container[];
   onClose: () => void;
   onEdit: (plant: Plant) => void;
 }
@@ -50,20 +52,18 @@ const getTempInfo = (minTemp: number, frostSensitive?: boolean): TempInfo => {
 
 const isPlacementTBD = (placement: string) => !placement.trim() || placement.toLowerCase().includes('tbd');
 
-const DIAGRAM_RULES: Array<{ keywords: string[]; id: string }> = [
-  { keywords: ['corner trellis', 'trellis', 'corner'], id: 'diagram-c1' },
-  { keywords: ['planter 1'], id: 'diagram-c2' },
-  { keywords: ['planter 2'], id: 'diagram-c3' },
-  { keywords: ['raised bed 1'], id: 'diagram-c4' },
-  { keywords: ['raised bed 2', 'raised bed'], id: 'diagram-c5' },
-  { keywords: ['grow bag'], id: 'diagram-growbags' },
-  { keywords: ['pot', 'pots', 'patio'], id: 'diagram-pots' },
-];
-
-const getDiagramId = (placement: string): string | null => {
-  if (isPlacementTBD(placement)) return null;
-  const p = placement.toLowerCase();
-  return DIAGRAM_RULES.find(rule => rule.keywords.some(kw => p.includes(kw)))?.id ?? null;
+const getDiagramId = (label: string, containers: Container[]): string | null => {
+  if (isPlacementTBD(label)) return null;
+  const lLower = label.toLowerCase().trim();
+  // Exact name match first
+  const exact = containers.find(c => c.name.toLowerCase() === lLower);
+  if (exact?.diagramId) return exact.diagramId;
+  // Fuzzy: label contains container name or vice versa
+  const fuzzy = containers.find(c => {
+    const n = c.name.toLowerCase();
+    return lLower.includes(n) || n.includes(lLower);
+  });
+  return fuzzy?.diagramId ?? null;
 };
 
 const CONTAINER_STATUS_CONFIG: Record<ContainerStop['status'], { dot: string; label: string; dimmed: boolean }> = {
@@ -164,11 +164,11 @@ function EditPlantButton({ plant, onClose, onEdit }: { plant: Plant; onClose: ()
   );
 }
 
-export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
+export function PlantDetailModal({ plant, containers, onClose, onEdit }: Props) {
   const showPest = plant.placement && !isPlacementTBD(plant.placement);
   const temp = plant.minTemp !== undefined ? getTempInfo(plant.minTemp, plant.frostSensitive) : null;
   const pest = showPest ? getPestInfo(plant.placement) : null;
-  const diagramId = plant.placement ? getDiagramId(plant.placement) : null;
+  const diagramId = plant.placement ? getDiagramId(plant.placement, containers) : null;
 
   const handleContainerClick = () => {
     if (!diagramId) return;
@@ -215,7 +215,7 @@ export function PlantDetailModal({ plant, onClose, onEdit }: Props) {
                     )}
                     {journey.map((stop: ContainerStop, i: number) => {
                       const cfg = CONTAINER_STATUS_CONFIG[stop.status];
-                      const stopDiagramId = getDiagramId(stop.label);
+                      const stopDiagramId = getDiagramId(stop.label, containers);
                       const isLast = i === journey.length - 1;
                       return (
                         <div

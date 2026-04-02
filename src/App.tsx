@@ -15,12 +15,14 @@ import { usePlants } from './hooks/usePlants';
 import { useShopping } from './hooks/useShopping';
 import { useWeather } from './hooks/useWeather';
 import { useContainers } from './hooks/useContainers';
+import { useAllocations } from './hooks/useAllocations';
 
 function App() {
   const { isSignedIn } = useAppAuth();
   const { plants, updatePlant, addPlant, deletePlant } = usePlants();
   const { items: shoppingItems, toggleItem } = useShopping();
   const { containers, addContainer, updateContainer, deleteContainer } = useContainers();
+  const { allocations } = useAllocations();
   const [activeSection, setActiveSection] = useState('overview');
   const weather = useWeather();
 
@@ -56,9 +58,10 @@ function App() {
             onUpdateContainer={updateContainer}
             onDeleteContainer={deleteContainer}
           />
-        <DiagramsSection />
+        <DiagramsSection containers={containers} allocations={allocations} plants={plants} />
         <SeedsSection
           plants={plants}
+          containers={containers}
           onUpdatePlant={updatePlant}
           onAddPlant={addPlant}
           onDeletePlant={deletePlant}

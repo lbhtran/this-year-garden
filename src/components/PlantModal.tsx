@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import type { Plant, PlantStage, ContainerStop, ContainerStatus, ContainerJourney } from '../data/plants';
 import { stageLabels } from '../data/plants';
+import type { Container } from '../data/containers';
 
 interface Props {
   plant?: Plant;
+  containers: Container[];
   onSave: (plant: Plant) => void;
   onClose: () => void;
 }
@@ -12,7 +14,7 @@ const stages: PlantStage[] = ['wishlist', 'sourced', 'sown', 'sprouted', 'chitti
 const containerStatuses: ContainerStatus[] = ['past', 'current', 'future'];
 const containerStatusLabels: Record<ContainerStatus, string> = { past: 'Past', current: 'Now', future: 'Next' };
 
-export function PlantModal({ plant, onSave, onClose }: Props) {
+export function PlantModal({ plant, containers, onSave, onClose }: Props) {
   const isNew = !plant;
   const [form, setForm] = useState<Plant>(() => plant || {
     id: `plant-${crypto.randomUUID()}`,
@@ -129,7 +131,7 @@ export function PlantModal({ plant, onSave, onClose }: Props) {
                     >
                       {containerStatuses.map(s => <option key={s} value={s}>{containerStatusLabels[s]}</option>)}
                     </select>
-                    <input
+                    <select
                       value={stop.label}
                       onChange={e => setForm(f => {
                         const journeys = [...(f.containers ?? [])];
@@ -138,9 +140,17 @@ export function PlantModal({ plant, onSave, onClose }: Props) {
                         journeys[ji] = stops;
                         return { ...f, containers: journeys };
                       })}
-                      placeholder="e.g. Seed tray (indoors)"
-                      style={{ padding: '7px 10px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, background: 'white' }}
-                    />
+                      style={{ padding: '7px 10px', border: '1px solid var(--cream-dark)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, background: 'white', cursor: 'pointer' }}
+                    >
+                      <option value="">— Select container —</option>
+                      {containers.map(c => (
+                        <option key={c.id} value={c.name}>{c.emoji} {c.name}</option>
+                      ))}
+                      {/* Preserve legacy free-text labels that don't match any container name */}
+                      {stop.label && !containers.some(c => c.name === stop.label) && (
+                        <option value={stop.label}>{stop.label}</option>
+                      )}
+                    </select>
                     <button
                       type="button"
                       onClick={() => setForm(f => {
