@@ -31,7 +31,7 @@ export async function PATCH(
       min_temp = COALESCE(${fields.min_temp !== undefined ? fields.min_temp : null}, min_temp),
       frost_sensitive = COALESCE(${fields.frost_sensitive !== undefined ? fields.frost_sensitive : null}, frost_sensitive),
       updated_at = NOW()
-    WHERE id = ${id}
+    WHERE user_id = ${userId} AND id = ${id}
     RETURNING *
   `;
   if (rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -48,6 +48,6 @@ export async function DELETE(
   }
   const { id } = await params;
   const sql = neon(process.env.POSTGRES_URL!);
-  await sql`DELETE FROM plants WHERE id = ${id}`;
+  await sql`DELETE FROM plants WHERE user_id = ${userId} AND id = ${id}`;
   return new NextResponse(null, { status: 204 });
 }

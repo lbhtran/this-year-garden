@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppAuth } from '../contexts/AuthContext';
-import { initialPlants } from '../data/plants';
 import type { Plant } from '../data/plants';
 
 function toPlant(row: Record<string, unknown>): Plant {
@@ -18,7 +17,7 @@ function toPlant(row: Record<string, unknown>): Plant {
 
 export function usePlants() {
   const { getToken } = useAppAuth();
-  const [plants, setPlants] = useState<Plant[]>(initialPlants);
+  const [plants, setPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
