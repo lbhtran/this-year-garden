@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../../_mcp-auth';
+import { isMcpAuthenticated, getMcpUserId, corsHeaders, handleOptions } from '../../../_mcp-auth';
 
 export function OPTIONS() {
   return handleOptions();
@@ -15,6 +15,7 @@ export async function PUT(
   }
   const { id } = await params;
   const sql = neon(process.env.POSTGRES_URL!);
+  const userId = getMcpUserId();
   const fields = (await request.json()) as Partial<{
     name: string;
     category: string;
@@ -26,7 +27,7 @@ export async function PUT(
       category = COALESCE(${fields.category !== undefined ? fields.category : null}, category),
       bought = COALESCE(${fields.bought !== undefined ? fields.bought : null}, bought),
       updated_at = NOW()
-    WHERE id = ${id}
+    WHERE user_id = ${userId} AND id = ${id}
     RETURNING *
   `;
   if (rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404, headers: corsHeaders });
@@ -42,6 +43,7 @@ export async function DELETE(
   }
   const { id } = await params;
   const sql = neon(process.env.POSTGRES_URL!);
-  await sql`DELETE FROM shopping_items WHERE id = ${id}`;
+  const userId = getMcpUserId();
+  await sql`DELETE FROM shopping_items WHERE user_id = ${userId} AND id = ${id}`;
   return new NextResponse(null, { status: 204, headers: corsHeaders });
 }

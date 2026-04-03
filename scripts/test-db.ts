@@ -111,6 +111,23 @@ async function main(): Promise<void> {
     assert(itemsB[0].name === 'Basil seeds', `userB item name mismatch`);
     console.log('  PASS  userB shopping items are isolated');
 
+    // Scoped delete: deleting userA shopping item does not affect userB.
+    await client.query(
+      'DELETE FROM shopping_items WHERE user_id = $1 AND id = $2',
+      [userA, 'item-a-1'],
+    );
+    const { rows: itemsAAfterDelete } = await client.query(
+      'SELECT * FROM shopping_items WHERE user_id = $1',
+      [userA],
+    );
+    assert(itemsAAfterDelete.length === 0, 'userA shopping item should be deleted');
+    const { rows: itemsBAfterDelete } = await client.query(
+      'SELECT * FROM shopping_items WHERE user_id = $1',
+      [userB],
+    );
+    assert(itemsBAfterDelete.length === 1, 'userB shopping item should be unaffected');
+    console.log('  PASS  scoped shopping delete does not affect other users');
+
     // Scoped delete: deleting userA row does not affect userB.
     await client.query(
       'DELETE FROM plants WHERE user_id = $1 AND id = $2',
@@ -310,6 +327,101 @@ async function main(): Promise<void> {
 
     // Clean up CRUD test data.
     await client.query('DELETE FROM containers WHERE user_id = ANY($1)', [[userA, userB]]);
+
+    // ── Shopping items CRUD operations ───────────────────────────────────────
+    // These tests mirror the exact SQL executed by the /api/shopping routes.
+
+    console.log('\nTesting shopping items CRUD operations (API parity)...');
+
+    // Clean up any leftover shopping CRUD test data.
+    await client.query('DELETE FROM shopping_items WHERE user_id = ANY($1)', [[userA, userB]]);
+
+    // POST equivalent: INSERT/upsert with user_id; bought defaults to false.
+    await client.query(
+      `INSERT INTO shopping_items (user_id, id, name, category, bought, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       ON CONFLICT (user_id, id) DO UPDATE SET
+         name = EXCLUDED.name, category = EXCLUDED.category,
+         bought = EXCLUDED.bought, updated_at = NOW()
+       RETURNING *`,
+      [userA, 'shop-a-1', 'Wool Pellets', 'pest-protection', false],
+    );
+    const { rows: shopCreatedRows } = await client.query(
+      'SELECT * FROM shopping_items WHERE user_id = $1 AND id = $2',
+      [userA, 'shop-a-1'],
+    );
+    assert(shopCreatedRows.length === 1, 'shopping item should be created');
+    assert(shopCreatedRows[0].bought === false, 'bought should default to false');
+    console.log('  PASS  POST creates shopping item with correct defaults');
+
+    // POST idempotency: upsert same item again with bought=true.
+    await client.query(
+      `INSERT INTO shopping_items (user_id, id, name, category, bought, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       ON CONFLICT (user_id, id) DO UPDATE SET
+         name = EXCLUDED.name, category = EXCLUDED.category,
+         bought = EXCLUDED.bought, updated_at = NOW()
+       RETURNING *`,
+      [userA, 'shop-a-1', 'Wool Pellets', 'pest-protection', true],
+    );
+    const { rows: shopUpsertRows } = await client.query(
+      'SELECT bought FROM shopping_items WHERE user_id = $1 AND id = $2',
+      [userA, 'shop-a-1'],
+    );
+    assert(shopUpsertRows[0].bought === true, 'upsert should update bought to true');
+    console.log('  PASS  POST upsert updates bought status correctly');
+
+    // PATCH equivalent: UPDATE bought scoped by user_id.
+    await client.query(
+      `UPDATE shopping_items SET bought = $3, updated_at = NOW()
+       WHERE user_id = $1 AND id = $2
+       RETURNING *`,
+      [userA, 'shop-a-1', false],
+    );
+    const { rows: patchedShopRows } = await client.query(
+      'SELECT bought FROM shopping_items WHERE user_id = $1 AND id = $2',
+      [userA, 'shop-a-1'],
+    );
+    assert(patchedShopRows[0].bought === false, 'PATCH should toggle bought back to false');
+    console.log('  PASS  PATCH toggles bought status correctly');
+
+    // Cross-user PATCH: userB cannot toggle userA's item.
+    await client.query(
+      `INSERT INTO shopping_items (user_id, id, name, category, bought, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [userB, 'shop-b-1', 'Bird Netting', 'pest-protection', false],
+    );
+    await client.query(
+      `UPDATE shopping_items SET bought = $3, updated_at = NOW()
+       WHERE user_id = $1 AND id = $2`,
+      [userB, 'shop-a-1', true],
+    );
+    const { rows: crossShopRows } = await client.query(
+      'SELECT bought FROM shopping_items WHERE user_id = $1 AND id = $2',
+      [userA, 'shop-a-1'],
+    );
+    assert(crossShopRows[0].bought === false, 'cross-user PATCH should not affect userA item');
+    console.log('  PASS  PATCH is scoped by user_id (cross-user update is blocked)');
+
+    // DELETE: removes correct item and is scoped by user_id.
+    await client.query(
+      'DELETE FROM shopping_items WHERE user_id = $1 AND id = $2',
+      [userA, 'shop-a-1'],
+    );
+    const { rows: deletedShopRows } = await client.query(
+      'SELECT id FROM shopping_items WHERE user_id = $1 AND id = $2',
+      [userA, 'shop-a-1'],
+    );
+    assert(deletedShopRows.length === 0, 'shopping item should be deleted');
+    const { rows: protectedShopRows } = await client.query(
+      'SELECT id FROM shopping_items WHERE user_id = $1 AND id = $2',
+      [userB, 'shop-b-1'],
+    );
+    assert(protectedShopRows.length === 1, 'userB item should survive userA delete');
+    console.log('  PASS  DELETE removes correct item (cross-user delete is blocked)');
+
+    // Clean up shopping CRUD test data.
+    await client.query('DELETE FROM shopping_items WHERE user_id = ANY($1)', [[userA, userB]]);
 
     // ── plant_allocations tests ─────────────────────────────────────────────
     console.log('\nTesting plant_allocations table...');

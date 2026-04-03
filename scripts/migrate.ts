@@ -1,13 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { Client } from 'pg';
 
 const connectionString = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
-
-if (!connectionString) {
-  console.error('Error: POSTGRES_URL (or DATABASE_URL) environment variable must be set.');
-  process.exit(1);
-}
 
 export async function runMigrations(client: Client): Promise<void> {
   await client.query(`
@@ -42,6 +38,10 @@ export async function runMigrations(client: Client): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  if (!connectionString) {
+    console.error('Error: POSTGRES_URL (or DATABASE_URL) environment variable must be set.');
+    process.exit(1);
+  }
   console.log('Running migrations...');
   const client = new Client({ connectionString });
   await client.connect();
@@ -53,7 +53,10 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error('Migration failed:', err);
-  process.exit(1);
-});
+// Only run when this file is executed directly, not when imported as a module.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('Migration failed:', err);
+    process.exit(1);
+  });
+}

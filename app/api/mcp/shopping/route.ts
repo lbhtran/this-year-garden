@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../_mcp-auth';
+import { isMcpAuthenticated, getMcpUserId, corsHeaders, handleOptions } from '../../_mcp-auth';
 
 export function OPTIONS() {
   return handleOptions();
@@ -11,7 +11,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
   }
   const sql = neon(process.env.POSTGRES_URL!);
-  const rows = await sql`SELECT * FROM shopping_items ORDER BY id`;
+  const userId = getMcpUserId();
+  const rows = await sql`SELECT * FROM shopping_items WHERE user_id = ${userId} ORDER BY id`;
   return NextResponse.json(rows, { headers: corsHeaders });
 }
 
@@ -27,10 +28,11 @@ export async function POST(request: Request) {
     bought?: boolean;
   };
   const { id, name, category, bought } = body;
+  const userId = getMcpUserId();
   const rows = await sql`
-    INSERT INTO shopping_items (id, name, category, bought, updated_at)
-    VALUES (${id}, ${name}, ${category ?? null}, ${bought ?? false}, NOW())
-    ON CONFLICT (id) DO UPDATE SET
+    INSERT INTO shopping_items (user_id, id, name, category, bought, updated_at)
+    VALUES (${userId}, ${id}, ${name}, ${category ?? null}, ${bought ?? false}, NOW())
+    ON CONFLICT (user_id, id) DO UPDATE SET
       name = EXCLUDED.name,
       category = EXCLUDED.category,
       bought = EXCLUDED.bought,

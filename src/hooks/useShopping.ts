@@ -18,21 +18,9 @@ function toShoppingItem(row: Record<string, unknown>): ShoppingItem {
 }
 
 export function useShopping() {
-  const { getToken } = useAppAuth();
+  const { getToken, isSignedIn } = useAppAuth();
   const [items, setItems] = useState<ShoppingItem[]>(initialShoppingItems);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/shopping')
-      .then(r => r.json())
-      .then((rows: Record<string, unknown>[]) => {
-        if (Array.isArray(rows) && rows.length > 0) {
-          setItems(rows.map(toShoppingItem));
-        }
-      })
-      .catch(() => {/* keep initial data on error */})
-      .finally(() => setLoading(false));
-  }, []);
 
   const authHeaders = useCallback(async () => {
     const token = await getToken();
@@ -42,12 +30,39 @@ export function useShopping() {
     };
   }, [getToken]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+
+    const load = async () => {
+      try {
+        const token = await getToken();
+        const fetchHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const r = await fetch('/api/shopping', { headers: fetchHeaders });
+        const rows = (await r.json()) as Record<string, unknown>[];
+        if (!cancelled && Array.isArray(rows) && rows.length > 0) {
+          setItems(rows.map(toShoppingItem));
+        }
+      } catch {/* keep initial data on error */}
+      finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, [isSignedIn, getToken]);
+
   const toggleItem = useCallback(async (id: string) => {
     let newBought = false;
+    let itemName = '';
+    let itemCategory = '';
     setItems(prev => {
       const updated = prev.map(item => {
         if (item.id === id) {
           newBought = !item.bought;
+          itemName = item.name;
+          itemCategory = item.category;
           return { ...item, bought: newBought };
         }
         return item;
@@ -56,10 +71,10 @@ export function useShopping() {
     });
     try {
       const headers = await authHeaders();
-      await fetch(`/api/shopping/${id}`, {
-        method: 'PATCH',
+      await fetch('/api/shopping', {
+        method: 'POST',
         headers,
-        body: JSON.stringify({ bought: newBought }),
+        body: JSON.stringify({ id, name: itemName, category: itemCategory, bought: newBought }),
       });
     } catch {/* optimistic */}
   }, [authHeaders]);

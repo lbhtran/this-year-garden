@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { isMcpAuthenticated, corsHeaders, handleOptions } from '../../../_mcp-auth';
+import { isMcpAuthenticated, getMcpUserId, corsHeaders, handleOptions } from '../../../_mcp-auth';
 
 export function OPTIONS() {
   return handleOptions();
@@ -15,6 +15,7 @@ export async function PUT(
   }
   const { id } = await params;
   const sql = neon(process.env.POSTGRES_URL!);
+  const userId = getMcpUserId();
   const fields = (await request.json()) as Partial<{
     name: string;
     emoji: string;
@@ -34,7 +35,7 @@ export async function PUT(
       min_temp = COALESCE(${fields.min_temp !== undefined ? fields.min_temp : null}, min_temp),
       frost_sensitive = COALESCE(${fields.frost_sensitive !== undefined ? fields.frost_sensitive : null}, frost_sensitive),
       updated_at = NOW()
-    WHERE id = ${id}
+    WHERE user_id = ${userId} AND id = ${id}
     RETURNING *
   `;
   if (rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404, headers: corsHeaders });
@@ -50,6 +51,7 @@ export async function DELETE(
   }
   const { id } = await params;
   const sql = neon(process.env.POSTGRES_URL!);
-  await sql`DELETE FROM plants WHERE id = ${id}`;
+  const userId = getMcpUserId();
+  await sql`DELETE FROM plants WHERE user_id = ${userId} AND id = ${id}`;
   return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
