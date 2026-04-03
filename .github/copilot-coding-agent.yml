@@ -1,0 +1,19 @@
+# GitHub Copilot coding-agent settings
+# https://docs.github.com/en/copilot/how-tos/agents/copilot-coding-agent/customizing-the-development-environment-for-copilot-coding-agent
+#
+# Configure the remote MCP server so that the Copilot cloud (coding) agent can
+# manage garden data (plants, containers, allocations) via the MCP tools
+# exposed by mcp-server-http.ts.
+#
+# Prerequisites:
+#   1. Deploy mcp-server-http.ts to a public host (see README-mcp.md §5).
+#   2. Set COPILOT_MCP_SERVER_URL to the deployed URL in your repo/org secrets.
+#   3. Set COPILOT_MCP_SERVER_SECRET to the shared secret in your repo/org secrets.
+#      (This is the same value you put in MCP_SERVER_SECRET on the MCP server host.)
+
+mcp_servers:
+  - name: this-year-garden
+    type: http
+    url: ${{ secrets.COPILOT_MCP_SERVER_URL }}
+    headers:
+      Authorization: Bearer ${{ secrets.COPILOT_MCP_SERVER_SECRET }}
