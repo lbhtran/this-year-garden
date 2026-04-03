@@ -14,6 +14,30 @@ function assert(condition: boolean, message: string): void {
   }
 }
 
+type PlantSeedRow = {
+  id: string; name: string; emoji: string; stage: string;
+  next_step: string; placement: string; min_temp: number; frost_sensitive: boolean;
+};
+
+/** Upsert a single plant row — mirrors the SQL used by POST /api/plants. */
+async function upsertPlant(client: Client, userId: string, r: PlantSeedRow): Promise<void> {
+  await client.query(
+    `INSERT INTO plants (user_id, id, name, emoji, stage, next_step, placement, min_temp, frost_sensitive, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+     ON CONFLICT (user_id, id) DO UPDATE SET
+       name            = EXCLUDED.name,
+       emoji           = EXCLUDED.emoji,
+       stage           = EXCLUDED.stage,
+       next_step       = EXCLUDED.next_step,
+       placement       = EXCLUDED.placement,
+       min_temp        = EXCLUDED.min_temp,
+       frost_sensitive = EXCLUDED.frost_sensitive,
+       updated_at      = NOW()
+     RETURNING *`,
+    [userId, r.id, r.name, r.emoji, r.stage, r.next_step, r.placement, r.min_temp, r.frost_sensitive],
+  );
+}
+
 async function main(): Promise<void> {
   const client = new Client({ connectionString });
   await client.connect();
@@ -454,6 +478,97 @@ async function main(): Promise<void> {
 
     // Clean up seed idempotency test data.
     await client.query('DELETE FROM plant_allocations WHERE user_id = $1', [seedUser]);
+
+    // ── Plant upsert (initial seed) ──────────────────────────────────────────
+    // Mirrors the POST /api/plants upsert used to seed initialPlants for new
+    // authenticated users when their database is empty.
+    console.log('\nTesting plant upsert (initial-seed behaviour)...');
+
+    const seedPlantUser = 'test-plant-seed';
+    await client.query('DELETE FROM plants WHERE user_id = $1', [seedPlantUser]);
+
+    const plantSeedRows = [
+      { id: '1',  name: 'Cherry Tomatoes', emoji: '🍅', stage: 'sprouted',  next_step: 'Thin/prick out at 2 true leaves', placement: 'Corner trellis — Side A', min_temp: 10,  frost_sensitive: true  },
+      { id: '5',  name: 'Basil',           emoji: '🌿', stage: 'sprouted',  next_step: 'Thin lightly',                    placement: 'Planter 1',                min_temp: 15,  frost_sensitive: true  },
+      { id: 'w1', name: 'Pak Choi',        emoji: '🥬', stage: 'wishlist',  next_step: 'Sow Apr–Aug',                     placement: 'Raised Bed 2',             min_temp: -2,  frost_sensitive: false },
+    ];
+
+    // First pass — insert all rows (simulates seeding for a new user).
+    for (const r of plantSeedRows) {
+      await upsertPlant(client, seedPlantUser, r);
+    }
+
+    const { rows: afterPlantSeedFirst } = await client.query(
+      'SELECT id FROM plants WHERE user_id = $1 ORDER BY id',
+      [seedPlantUser],
+    );
+    assert(afterPlantSeedFirst.length === plantSeedRows.length, `Expected ${plantSeedRows.length} plants after first seed pass, got ${afterPlantSeedFirst.length}`);
+    console.log('  PASS  first seed pass inserts all initial plants');
+
+    // Second pass — upsert (simulates re-seeding being idempotent).
+    for (const r of plantSeedRows) {
+      await upsertPlant(client, seedPlantUser, r);
+    }
+
+    const { rows: afterPlantSeedSecond } = await client.query(
+      'SELECT id FROM plants WHERE user_id = $1 ORDER BY id',
+      [seedPlantUser],
+    );
+    assert(afterPlantSeedSecond.length === plantSeedRows.length, `Expected ${plantSeedRows.length} plants after second seed pass, got ${afterPlantSeedSecond.length}`);
+    console.log('  PASS  second seed pass is idempotent (no duplicate plants)');
+
+    // Spot-check stored values.
+    const { rows: spotCheck } = await client.query(
+      `SELECT id, name, stage, frost_sensitive, min_temp FROM plants
+       WHERE user_id = $1 ORDER BY id`,
+      [seedPlantUser],
+    );
+    const plantMap = Object.fromEntries(spotCheck.map(r => [r.id, r]));
+    assert(plantMap['1'].name === 'Cherry Tomatoes', `id=1 name mismatch`);
+    assert(plantMap['1'].stage === 'sprouted',       `id=1 stage mismatch`);
+    assert(plantMap['1'].frost_sensitive === true,   `id=1 frost_sensitive mismatch`);
+    assert(plantMap['1'].min_temp === 10,            `id=1 min_temp mismatch`);
+    assert(plantMap['w1'].stage === 'wishlist',      `id=w1 stage mismatch`);
+    console.log('  PASS  spot-check seeded plant values are correct');
+
+    // ── Plant PATCH (stage update) ───────────────────────────────────────────
+    // Mirrors the SQL executed by PATCH /api/plants/[id] when a user advances
+    // a plant's growth stage via the UI.
+    console.log('\nTesting plant PATCH (stage update, API parity)...');
+
+    await client.query(
+      `UPDATE plants SET
+         stage      = COALESCE($1, stage),
+         updated_at = NOW()
+       WHERE user_id = $2 AND id = $3`,
+      ['planted', seedPlantUser, '1'],
+    );
+
+    const { rows: patchedRows } = await client.query(
+      'SELECT stage FROM plants WHERE user_id = $1 AND id = $2',
+      [seedPlantUser, '1'],
+    );
+    assert(patchedRows.length === 1, 'patched plant should still exist');
+    assert(patchedRows[0].stage === 'planted', `stage should be 'planted' after PATCH, got '${patchedRows[0].stage}'`);
+    console.log('  PASS  PATCH updates plant stage correctly');
+
+    // Cross-user PATCH is blocked by user_id scoping.
+    await client.query(
+      `UPDATE plants SET
+         stage      = COALESCE($1, stage),
+         updated_at = NOW()
+       WHERE user_id = $2 AND id = $3`,
+      ['harvesting', 'some-other-user', '1'],
+    );
+    const { rows: crossPatch } = await client.query(
+      'SELECT stage FROM plants WHERE user_id = $1 AND id = $2',
+      [seedPlantUser, '1'],
+    );
+    assert(crossPatch[0].stage === 'planted', 'cross-user PATCH should not affect plant');
+    console.log('  PASS  cross-user PATCH does not affect plant');
+
+    // Clean up plant seed test data.
+    await client.query('DELETE FROM plants WHERE user_id = $1', [seedPlantUser]);
 
     console.log('\nAll tests passed!');
   } finally {
