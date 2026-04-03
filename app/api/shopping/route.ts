@@ -2,9 +2,13 @@ import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { getAuthenticatedUserId } from '../_auth';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const userId = await getAuthenticatedUserId(request);
+  if (!userId) {
+    return NextResponse.json([]);
+  }
   const sql = neon(process.env.POSTGRES_URL!);
-  const rows = await sql`SELECT * FROM shopping_items ORDER BY id`;
+  const rows = await sql`SELECT * FROM shopping_items WHERE user_id = ${userId} ORDER BY id`;
   return NextResponse.json(rows);
 }
 
@@ -22,9 +26,9 @@ export async function POST(request: Request) {
   };
   const { id, name, category, bought } = body;
   const rows = await sql`
-    INSERT INTO shopping_items (id, name, category, bought, updated_at)
-    VALUES (${id}, ${name}, ${category ?? null}, ${bought ?? false}, NOW())
-    ON CONFLICT (id) DO UPDATE SET
+    INSERT INTO shopping_items (user_id, id, name, category, bought, updated_at)
+    VALUES (${userId}, ${id}, ${name}, ${category ?? null}, ${bought ?? false}, NOW())
+    ON CONFLICT (user_id, id) DO UPDATE SET
       name = EXCLUDED.name,
       category = EXCLUDED.category,
       bought = EXCLUDED.bought,
