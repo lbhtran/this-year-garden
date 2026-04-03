@@ -11,7 +11,8 @@
     "seed:containers": "tsx scripts/seed-containers.ts",
     "seed:plants": "tsx scripts/seed-plants.ts",
     "seed:allocations": "tsx scripts/seed-allocations.ts",
-    "test:db": "tsx scripts/test-db.ts"
+    "test:db": "tsx scripts/test-db.ts",
+    "start:mcp-http": "tsx mcp-server-http.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6",
