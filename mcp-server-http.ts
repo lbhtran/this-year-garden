@@ -291,8 +291,32 @@ function buildMcpServer(): McpServer {
 // Session map for stateful connections (GET /mcp streams).
 const sessions = new Map<
   string,
-  { transport: StreamableHTTPServerTransport; server: McpServer }
+  { transport: StreamableHTTPServerTransport; server: McpServer; lastActivity: number }
 >();
+
+// Evict sessions that have gone idle without a clean DELETE (client crash,
+// network drop) so the map doesn't grow unbounded on a long-running server.
+const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const SESSION_SWEEP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+async function evictIdleSessions(): Promise<void> {
+  const now = Date.now();
+  for (const [id, session] of sessions) {
+    if (now - session.lastActivity > SESSION_IDLE_TIMEOUT_MS) {
+      sessions.delete(id);
+      try {
+        await session.transport.close();
+        await session.server.close();
+      } catch (err) {
+        console.error(`Error closing idle session ${id}:`, err);
+      }
+    }
+  }
+}
+
+setInterval(() => {
+  void evictIdleSessions();
+}, SESSION_SWEEP_INTERVAL_MS).unref();
 
 function readBody(req: http.IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -345,8 +369,9 @@ const httpServer = http.createServer(async (req, res) => {
       // Stateful: reuse existing session if Mcp-Session-Id is provided
       const sessionId = req.headers['mcp-session-id'] as string | undefined;
       if (sessionId && sessions.has(sessionId)) {
-        const { transport } = sessions.get(sessionId)!;
-        await transport.handleRequest(req, res, parsedBody);
+        const session = sessions.get(sessionId)!;
+        session.lastActivity = Date.now();
+        await session.transport.handleRequest(req, res, parsedBody);
         return;
       }
 
@@ -355,7 +380,7 @@ const httpServer = http.createServer(async (req, res) => {
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (id) => {
-          sessions.set(id, { transport, server: mcpServer });
+          sessions.set(id, { transport, server: mcpServer, lastActivity: Date.now() });
         },
       });
 
@@ -370,8 +395,9 @@ const httpServer = http.createServer(async (req, res) => {
       // SSE streaming connection for server-to-client notifications
       const sessionId = req.headers['mcp-session-id'] as string | undefined;
       if (sessionId && sessions.has(sessionId)) {
-        const { transport } = sessions.get(sessionId)!;
-        await transport.handleRequest(req, res);
+        const session = sessions.get(sessionId)!;
+        session.lastActivity = Date.now();
+        await session.transport.handleRequest(req, res);
         return;
       }
       res.writeHead(400, { 'Content-Type': 'application/json' });
